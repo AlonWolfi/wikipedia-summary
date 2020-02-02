@@ -1,0 +1,5 @@
+{
+  "data_dir" : "data",
+  "data_list_xml_file" : "data_list.xml",
+  "data_list_file" : "data_list.txt"
+}
