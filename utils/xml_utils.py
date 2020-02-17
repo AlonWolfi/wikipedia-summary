@@ -42,4 +42,7 @@ def generate_pages(xml_path):
     root = get_root_of_file(xml_path)
     pages = root.findall('page')
     for page in pages:
-        yield page.find('revision').find('text').text
+        try:
+            yield page.find('title').name, page.find('revision').find('text').text
+        except:
+            yield None, page.find('revision').find('text').text

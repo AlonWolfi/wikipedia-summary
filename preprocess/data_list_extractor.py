@@ -52,7 +52,7 @@ class DataListExctratorTask(Task):
         data_list = list()
 
         # for each list in the lists of data
-        for page_text in generate_pages(data_list_xml_path):
+        for _, page_text in generate_pages(data_list_xml_path):
             # Get line generator
             lines = page_text.split('\n')
             lines_generator = get_lines_generator(lines)

@@ -1,10 +1,21 @@
 import json
 from pathlib import Path
+from typing import Union, Iterable
 
 from utils.utils import get_project_dir
 
 CONFIG_FILE = 'config.json'
 CONFIG = None
+
+def save_dict_to_json(data: dict, file_path: Union[str, Path]):
+    try:
+        if file_path[-5:] != '.json':
+            raise Exception
+    except:
+        print('JSON file must end with .json')
+
+    with open(file_path, 'w') as json_file:
+        json.dump(data, json_file)
 
 def get_config():
     '''
