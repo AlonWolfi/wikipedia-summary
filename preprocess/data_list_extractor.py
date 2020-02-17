@@ -49,6 +49,8 @@ class DataListExctratorTask(Task):
         # Read xml
         data_list_xml_path = self._get_xml_data_list_path()
 
+        remove_first_line_nonesense_xml(data_list_xml_path)
+
         data_list = list()
 
         # for each list in the lists of data
