@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Union, Iterable
 
-from utils.utils import get_project_dir
+
 
 CONFIG_FILE = 'config.json'
 CONFIG = None
@@ -25,6 +25,7 @@ def get_config():
     # If config not created - creates config
     if not CONFIG:
         # get path
+        from utils.utils import get_project_dir
         project_path = get_project_dir()
         config_path = project_path / CONFIG_FILE
         # loads config
