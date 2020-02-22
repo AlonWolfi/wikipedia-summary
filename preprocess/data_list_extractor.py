@@ -3,6 +3,7 @@ import shutil
 import xml.etree.ElementTree as ET
 import re
 import luigi
+import os
 
 from luigi import Task, LocalTarget
 from pathlib import Path
@@ -14,19 +15,20 @@ from utils.utils import get_project_dir
 
 INSTANCE_LINK_RE = '^\*\[\[([^\]]*)\]\]'
 
+IS_DEPENDENCY = not (__name__ == '__main__')
 
 class DataListExctratorTask(Task):
     '''
     This task gets
     '''
 
-    def requires(self):
-        pass
-
     def output(self):
         data_path = Path(get_config()['data_dir'])
         data_list_path = data_path / get_config()['data_list_file']
         return LocalTarget(data_list_path)
+
+    def complete(self):
+        return IS_DEPENDENCY
 
     @staticmethod
     def _get_intance_name(line):
@@ -53,7 +55,7 @@ class DataListExctratorTask(Task):
 
         data_list = list()
 
-        # for each list in the lists of data
+        # for each list in the lists of raw_text
         for _, page_text in generate_pages(data_list_xml_path):
             # Get line generator
             lines = page_text.split('\n')
@@ -74,7 +76,7 @@ class DataListExctratorTask(Task):
                         data_list.append(instance_name)
                 line = next(lines_generator)
 
-        save_to_file(data_list, self.output().path)
+        save_data('\n'.join(data_list), self.output().path)
 
 
 if __name__ == '__main__':
@@ -82,5 +84,5 @@ if __name__ == '__main__':
         [
             DataListExctratorTask()
         ],
-        local_scheduler=True
+        local_scheduler=False
     )
