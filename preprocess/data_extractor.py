@@ -20,7 +20,7 @@ class DataExtractor(luigi.Task):
         return PageListExtractorTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path_from_config('data_file'))
+        return luigi.LocalTarget(get_file_path('full_df.pickle'))
 
     def run(self):
         pages_lst = self.requires().get_output().split('\n')
@@ -54,13 +54,4 @@ class DataExtractor(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.build(
-        [
-            DataExtractor(
-                DEBUG=True
-            )
-        ],
-        local_scheduler=False
-    )
-    print('#### output ####')
-    print(DataExtractor.get_output())
+    luigi.run_task(DataExtractor)

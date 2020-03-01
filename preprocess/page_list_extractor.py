@@ -14,12 +14,12 @@ from utils.utils import *
 INSTANCE_LINK_RE = '^\*\[\[([^\]]*)\]\]'
 
 # BUGFIX
-IS_DEPENDENCY = not (__name__ == '__main__')
+# IS_DEPENDENCY = __name__ == '__main__'
 
 
 class PageListValidation(luigi.Task):
     def output(self):
-        return luigi.LocalTarget(get_file_path_from_config('page_list_xml_file', 'data_dir'))
+        return luigi.LocalTarget(get_file_path('page_list.xml', 'data'))
 
     def run(self):
         pass
@@ -34,10 +34,10 @@ class PageListExtractorTask(luigi.Task):
         return PageListValidation()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path_from_config('page_list_file'))
+        return luigi.LocalTarget(get_file_path('page_list.txt'))
 
-    def complete(self):
-        return IS_DEPENDENCY
+    # def complete(self):
+        # return IS_DEPENDENCY
 
     @staticmethod
     def _get_intance_name(line):
@@ -85,13 +85,4 @@ class PageListExtractorTask(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.build(
-        [
-            PageListExtractorTask(
-                DEBUG=True
-            )
-        ],
-        local_scheduler=False
-    )
-    print('#### output ####')
-    print(PageListExtractorTask.get_output())
+    luigi.run_task(PageListExtractorTask)

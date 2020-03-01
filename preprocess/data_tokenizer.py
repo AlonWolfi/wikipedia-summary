@@ -1,11 +1,4 @@
-import os
-import glob
 import nltk
-import gensim
-import pandas as pd
-import wikipedia
-import wikipediaapi
-import wptools
 
 import utils.luigi_wrapper as luigi
 from nltk.corpus import stopwords
@@ -18,50 +11,49 @@ from preprocess.data_extractor import DataExtractor
 from preprocess.page_list_extractor import PageListExtractorTask
 from utils.utils import *
 
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+
 
 class DataTokenizer(luigi.Task):
     def requires(self):
         return DataExtractor()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path_from_config('tokenized_data'))
+        return luigi.LocalTarget(get_file_path('tokenized_array.pickle'))
 
     @staticmethod
-    def tokenize_doc(doc) -> set:
+    def tokenize_doc(doc):
         tokens = nltk.word_tokenize(doc)
         tokens = [w for w in tokens if not w in stop_words]
         tokens = [porter.stem(w) for w in tokens]
-        return set(tokens)
+        return list(tokens)
 
-    def __get_vocabulary(self) -> set:
+    @classmethod
+    def __get_vocabulary(cls, texts) -> set:
         vocab: set = set()
-        for doc in self.full_df['text']:
-            tokens = self.tokenize_doc(doc)
+        for doc in texts:
+            tokens = cls.tokenize_doc(doc)
             vocab = vocab.union(tokens)
         return vocab
 
     def run(self):
-        self.full_df = self.requires().get_output()
+        full_df = self.requires().get_output()
 
-        vocab = self.__get_vocabulary()
+        vocab = self.__get_vocabulary(full_df['text'])
 
-        tokenized_df = self.full_df.copy()
+        tokenized_text = full_df['text'].apply(lambda text: ' '.join(self.tokenize_doc(text)))
 
-        #### replace for tokenization
-        tokenized_df['a'] = 1
-        tokenized_df = tokenized_df[['a']]
+        vectorizer = TfidfVectorizer()
+        vectorizer.fit(tokenized_text)
+        transformed_array = vectorizer.transform(tokenized_text)
 
-        save_data(tokenized_df, self.output().path)
-
+        if self.DATAFRAME:
+            tokenized_df = pd.DataFrame(index=full_df.index)
+            for col, value in zip(vectorizer.get_feature_names(), transformed_array.toarray().T):
+                tokenized_df[col] = value
+            save_data(tokenized_df, self.output().path)
+        else:
+            save_data(transformed_array, self.output().path)
 
 if __name__ == '__main__':
-    luigi.build(
-        [
-            DataTokenizer(
-                DEBUG=True
-            )
-        ],
-        local_scheduler=False
-    )
-    print('#### output ####')
-    print(DataTokenizer.get_output())
+    luigi.test_task(DataTokenizer)
