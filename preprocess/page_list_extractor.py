@@ -2,30 +2,39 @@ import xml
 import shutil
 import xml.etree.ElementTree as ET
 import re
-import luigi
 import os
+import utils.luigi_wrapper as luigi
 
-from luigi import Task, LocalTarget
 from pathlib import Path
 
-from utils.json_utils import get_config
 from utils.text_utils import *
 from utils.xml_utils import *
-from utils.utils import get_project_dir
+from utils.utils import *
 
 INSTANCE_LINK_RE = '^\*\[\[([^\]]*)\]\]'
 
+# BUGFIX
 IS_DEPENDENCY = not (__name__ == '__main__')
 
-class DataListExctratorTask(Task):
+
+class PageListValidation(luigi.Task):
+    def output(self):
+        return luigi.LocalTarget(get_file_path_from_config('page_list_xml_file', 'data_dir'))
+
+    def run(self):
+        pass
+
+
+class PageListExtractorTask(luigi.Task):
     '''
     This task gets
     '''
 
+    def requires(self):
+        return PageListValidation()
+
     def output(self):
-        data_path = Path(get_config()['data_dir'])
-        data_list_path = data_path / get_config()['data_list_file']
-        return LocalTarget(data_list_path)
+        return luigi.LocalTarget(get_file_path_from_config('page_list_file'))
 
     def complete(self):
         return IS_DEPENDENCY
@@ -43,13 +52,9 @@ class DataListExctratorTask(Task):
             # No link which means no link and no page in wikipedia
             return None
 
-    def _get_xml_data_list_path(self):
-        data_path = get_config()['data_dir']
-        return get_project_dir() / data_path / get_config()['data_list_xml_file']
-
     def run(self):
         # Read xml
-        data_list_xml_path = self._get_xml_data_list_path()
+        data_list_xml_path = self.input().path
 
         remove_first_line_nonesense_xml(data_list_xml_path)
 
@@ -82,7 +87,11 @@ class DataListExctratorTask(Task):
 if __name__ == '__main__':
     luigi.build(
         [
-            DataListExctratorTask()
+            PageListExtractorTask(
+                # DEBUG=True
+            )
         ],
         local_scheduler=False
     )
+    print('#### output ####')
+    print(PageListExtractorTask.get_output())

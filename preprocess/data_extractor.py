@@ -1,146 +1,61 @@
-import xml
-import shutil
-import xml.etree.ElementTree as ET
-import re
-import luigi
-import json
+import os
+import glob
+import nltk
+import gensim
+import pandas as pd
+import wikipedia
+import wikipediaapi
+import wptools
 
-from luigi import Task, LocalTarget
-from pathlib import Path
+import utils.luigi_wrapper as luigi
 
-from utils.json_utils import get_config
-from utils.text_utils import *
-from utils.xml_utils import *
-from utils.utils import get_project_dir, task_done
+from preprocess.page_list_extractor import PageListExtractorTask
 
-from preprocess.data_list_extractor import DataListExctratorTask
+from utils.wikipedia_utils import *
+from utils.utils import *
 
 
-class InstanceDataExtractorTask(Task):
-    name = luigi.Parameter()
-    page_text = luigi.Parameter()
-
+class DataExtractor(luigi.Task):
     def requires(self):
-        pass
+        return PageListExtractorTask()
 
     def output(self):
-        config = get_config()
-
-        data_path = get_project_dir() / get_config()['data_dir']
-        raw_data_path = data_path / get_config()['data_raw_dir']
-        labels_path = data_path / get_config()['data_labels_dir']
-        return {
-            'raw_text': LocalTarget(raw_data_path / (self.name + '.txt')),
-            'labels': LocalTarget(labels_path / (self.name + '.json'))
-        }
-
-    @staticmethod
-    def _get_lines_generator(lines):
-        for line in lines:
-            yield line
-
-    @staticmethod
-    def extract_answer(answer: str):
-        start_link = '\[\['
-        link = '[^\[\|]+'
-        links = '((' + link + '\|)*' + '(' + link + '))'
-        end_link = '\]\]'
-
-        def get_link_first(m):
-            try:
-                return m.group(2)[:-1]
-            except:
-                return m.group(1)
-
-        return re.sub(start_link + links + end_link, get_link_first, answer)
-
-    @classmethod
-    def extract_label(cls, label_line):
-        # [1:] for no '|'
-        line_splited = label_line[1:].split('=')
-        question = line_splited[0]
-        answer = '='.join(line_splited[1:])
-        if answer == '':
-            return None
-        return question, cls.extract_answer(answer)
-
-    def save(self, data, labels):
-        save_data(data, self.output()['raw_text'].path)
-        save_data(labels, self.output()['labels'].path)
+        return luigi.LocalTarget(get_file_path_from_config('data_file'))
 
     def run(self):
-        lines = self.page_text.split('\n')
-        lines_generator = get_lines_generator(lines)
+        pages_lst = self.requires().get_output()
 
-        labels = list()
+        if self.DEBUG:
+            pages_lst = pages_lst[:3]
 
-        line = next(lines_generator)
+        content_lst = []
+        infoboxes_lst = []
+        for p in pages_lst:
+            doc = load_text(p)
+            if doc is None:
+                continue
+            infobox = load_info_box(p)
 
+            content_lst.append(doc)
+            infoboxes_lst.append(infobox)
 
-        for line in lines_generator:
-            if line[:9] == '{{Infobox':
-                break
-        try:
-            line = next(lines_generator)
-        except:
-            labels = dict()
-            data = ''
-            self.save(data, labels)
-            return False
+        df = pd.DataFrame()
+        df['page'] = pages_lst
+        df['text'] = content_lst
+        df['infobox'] = infoboxes_lst
+        df = df.set_index('page')
 
-
-        labels = dict()
-
-        for line in lines_generator:
-            if re.match('^}}.*',line):
-                break
-
-            extraction = self.extract_label(line)
-            if extraction:
-                q, a = extraction
-                labels[q] = a
-
-        data = '\n'.join(list(lines_generator))
-
-        self.save(data, labels)
-
-
-class DataExctratorTask(Task):
-
-    def _file_to_list(self, file_path):
-        instance_list = list()
-        with open(file_path) as file:
-            instance_list = file.readlines().split('/n')
-        return instance_list
-
-    def requires(self):
-        return {
-            'data_list': DataListExctratorTask()
-        }
-
-    def output(self):
-        return LocalTarget(Path(get_config()['cache_dir']) / (self.__class__.__name__ + '.done'))
-
-    def run(self):
-        data_path = get_project_dir() / get_config()['data_dir'] / 'data.xml'
-        remove_first_line_nonesense_xml(data_path)
-
-        for name, page_text in generate_pages(data_path):
-            # Call Task
-            yield InstanceDataExtractorTask(name=name, page_text=page_text)
-
-        task_done(str(self.__class__.__name__))
+        save_data(df, self.output().path)
 
 
 if __name__ == '__main__':
-    import os
-
-    task_done_path = get_project_dir() / get_config()['cache_dir'] / 'DataExctratorTask.done'
-    if os.path.exists(task_done_path):
-        os.remove(task_done_path)
     luigi.build(
         [
-            DataExctratorTask()
+            DataExtractor(
+                DEBUG=True
+            )
         ],
-        local_scheduler=False
+        local_scheduler=True
     )
+    print('#### output ####')
+    print(DataExtractor.get_output())

@@ -1,9 +1,7 @@
 {
-  "data_dir" : "data",
-  "data_raw_dir" : "raw_text",
-  "data_processed_dir" : "text",
-  "data_labels_dir" : "labels",
-  "cache_dir" : "cache",
-  "data_list_xml_file" : "data_list.xml",
-  "data_list_file" : "data_list.txt"
+  "data_dir": "data",
+  "cache_dir": "cache",
+  "page_list_xml_file": "page_list.xml",
+  "page_list_file": "page_list.txt",
+  "data_file": "full_df.pickle"
 }

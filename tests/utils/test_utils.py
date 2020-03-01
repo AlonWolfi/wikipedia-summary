@@ -7,7 +7,6 @@ class UtilsTest(TestCase):
     def test_task_done(self):
         test_name = 'test'
         task_done(test_name)
-        from utils.json_utils import get_config
         path = pathlib.Path.cwd().parents[1] / get_config()['cache_dir'] / (test_name + '.done')
         self.assertTrue(os.path.exists(path))
         self.assertTrue(os.path.isfile(path))
