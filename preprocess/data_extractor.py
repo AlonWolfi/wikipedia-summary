@@ -28,6 +28,7 @@ class DataExtractor(luigi.Task):
         if self.DEBUG:
             pages_lst = pages_lst[:50]
 
+        page_index = []
         content_lst = []
         infoboxes_lst = []
         for p in pages_lst:
@@ -35,7 +36,10 @@ class DataExtractor(luigi.Task):
             if doc is None:
                 continue
             infobox = load_info_box(p)
+            if infobox is None:
+                continue
 
+            page_index.append(p)
             content_lst.append(doc)
             infoboxes_lst.append(infobox)
 
@@ -43,7 +47,7 @@ class DataExtractor(luigi.Task):
 
         print(pages_lst)
 
-        df['page'] = pages_lst
+        df['page'] = page_index
         df['text'] = content_lst
         df['infobox'] = infoboxes_lst
         df = df.set_index('page')
