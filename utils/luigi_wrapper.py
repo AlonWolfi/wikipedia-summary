@@ -7,7 +7,7 @@ from utils.utils import read_data
 
 
 class Task(luigi.Task):
-    DEBUG = luigi.BoolParameter
+    DEBUG = luigi.BoolParameter(significant=True)
 
     @classmethod
     def get_output(cls):

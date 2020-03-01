@@ -88,7 +88,7 @@ if __name__ == '__main__':
     luigi.build(
         [
             PageListExtractorTask(
-                # DEBUG=True
+                DEBUG=True
             )
         ],
         local_scheduler=False

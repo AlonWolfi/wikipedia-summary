@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+import pandas as pd
 from pathlib import Path
 from typing import Union, Iterable
 
@@ -73,16 +74,23 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
 
     validate_path(file_path)
 
-    with open(file_path, 'w+', encoding=encoding) as file:
-        if file_path.suffix == '.pickle':
-            pickle.dump(data, file)
-        if file_path.suffix == '.json':
-            json.dump(data, file)
+    if file_path.suffix == '.pickle':
+        if type(data) == pd.DataFrame:
+            pd.to_pickle(data, file_path)
         else:
+            with open(file_path, 'wb') as file:
+                print(file_path)
+                print(file)
+                pickle.dump(data, file)
+    elif file_path.suffix == '.json':
+        with open(file_path, 'wb') as file:
+            json.dump(data, file)
+    else:
+        with open(file_path, 'w+', encoding=encoding) as file:
             file.write(data)
 
 
-def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
+def read_data(file_path: Union[str, Path], is_dataframe = True, encoding: str = "utf-8"):
     '''
     Saves text to file
     '''
@@ -93,12 +101,18 @@ def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
 
     data = None
 
-    with open(file_path, 'r+', encoding=encoding) as file:
-        if file_path.suffix == '.pickle':
-            data = pickle.load(file)
-        if file_path.suffix == '.json':
-            data = json.load(file)
+    if file_path.suffix == '.pickle':
+        if is_dataframe:
+            data = pd.read_pickle(file_path)
         else:
+            with open(file_path, 'rb') as file:
+                data = pickle.load(file)
+    elif file_path.suffix == '.json':
+        with open(file_path, 'rb') as file:
+            data = json.load(file)
+    else:
+        with open(file_path, 'r+', encoding=encoding) as file:
+            print(file_path)
             data = file.read()
     return data
 

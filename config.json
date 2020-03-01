@@ -3,5 +3,6 @@
   "cache_dir": "cache",
   "page_list_xml_file": "page_list.xml",
   "page_list_file": "page_list.txt",
-  "data_file": "full_df.pickle"
+  "data_file": "full_df.pickle",
+  "tokenized_data": "tokenized_df.pickle"
 }

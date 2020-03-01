@@ -23,7 +23,7 @@ class DataExtractor(luigi.Task):
         return luigi.LocalTarget(get_file_path_from_config('data_file'))
 
     def run(self):
-        pages_lst = self.requires().get_output()
+        pages_lst = self.requires().get_output().split('\n')
 
         if self.DEBUG:
             pages_lst = pages_lst[:3]
@@ -39,11 +39,16 @@ class DataExtractor(luigi.Task):
             content_lst.append(doc)
             infoboxes_lst.append(infobox)
 
-        df = pd.DataFrame()
+        df: pd.DataFrame() = pd.DataFrame()
+
+        print(pages_lst)
+
         df['page'] = pages_lst
         df['text'] = content_lst
         df['infobox'] = infoboxes_lst
         df = df.set_index('page')
+
+        print(df.index)
 
         save_data(df, self.output().path)
 
@@ -55,7 +60,7 @@ if __name__ == '__main__':
                 DEBUG=True
             )
         ],
-        local_scheduler=True
+        local_scheduler=False
     )
     print('#### output ####')
     print(DataExtractor.get_output())
