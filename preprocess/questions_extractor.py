@@ -1,12 +1,3 @@
-import os
-import glob
-import nltk
-import gensim
-import pandas as pd
-import wikipedia
-import wikipediaapi
-import wptools
-
 import utils.luigi_wrapper as luigi
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
@@ -16,7 +7,7 @@ stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
 from preprocess.data_extractor import DataExtractor
-from preprocess.page_list_extractor import PageListExtractorTask
+from preprocess.page_list_extractor_xml import PageListExtractorTask
 from utils.utils import *
 
 

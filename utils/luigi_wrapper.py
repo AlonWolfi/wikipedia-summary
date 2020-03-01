@@ -35,12 +35,13 @@ class Task(luigi.Task):
 
 
 def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False):
-    if delete_all:
-        shutil.rmtree(get_project_dir() / 'cache')
-    else:
-        output_path = task.output(task).path
-        if os.path.exists(output_path):
-            os.remove(output_path)
+    if get_from_config('DELETE_CACHE'):
+        if delete_all:
+            shutil.rmtree(get_project_dir() / 'cache')
+        else:
+            output_path = task.output(task).path
+            if os.path.exists(output_path):
+                os.remove(output_path)
     luigi.build(
         [
             task()

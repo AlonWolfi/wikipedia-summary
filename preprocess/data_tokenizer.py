@@ -8,7 +8,6 @@ stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
 from preprocess.data_extractor import DataExtractor
-from preprocess.page_list_extractor import PageListExtractorTask
 from utils.utils import *
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer

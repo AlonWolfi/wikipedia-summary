@@ -1,11 +1,4 @@
-import xml
-import shutil
-import xml.etree.ElementTree as ET
-import re
-import os
 import utils.luigi_wrapper as luigi
-
-from pathlib import Path
 
 from utils.text_utils import *
 from utils.xml_utils import *
@@ -34,7 +27,7 @@ class PageListExtractorTask(luigi.Task):
         return PageListValidation()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('page_list.txt'))
+        return luigi.LocalTarget(get_file_path('page_list_xml.txt'))
 
     # def complete(self):
         # return IS_DEPENDENCY

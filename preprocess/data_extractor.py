@@ -9,7 +9,7 @@ import wptools
 
 import utils.luigi_wrapper as luigi
 
-from preprocess.page_list_extractor import PageListExtractorTask
+from preprocess.page_list_extractor_wptools import PageListExtractorTask
 
 from utils.wikipedia_utils import *
 from utils.utils import *
@@ -26,7 +26,7 @@ class DataExtractor(luigi.Task):
         pages_lst = self.requires().get_output().split('\n')
 
         if self.DEBUG:
-            pages_lst = pages_lst[:3]
+            pages_lst = pages_lst[:50]
 
         content_lst = []
         infoboxes_lst = []
