@@ -142,11 +142,13 @@ class QuestionsModel(luigi.Task):
         print(f'X.shape is {self.X.shape}')
         print(f'y.shape is {self.y.shape}')
 
+        # Preprocess
         # X = self.__random_features(X)
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.3,
                                                                                 shuffle=True)
-
+        # Choose model
+        # TODO - try different moodels and add grid search
         model = LinearRegression()
 
         # fit & pred
@@ -166,6 +168,6 @@ class QuestionsModel(luigi.Task):
         f.savefig(self.output().path)
         # self.task_done()
 
-
+# General TODO - add prior for questions
 if __name__ == '__main__':
     luigi.run_task(QuestionsModel)

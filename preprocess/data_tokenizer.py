@@ -46,6 +46,9 @@ class DataTokenizer(luigi.Task):
         vectorizer.fit(tokenized_text)
         transformed_array = vectorizer.transform(tokenized_text)
 
+        # TODO - remove highly-frequent and highly-un-frequent tokens such that
+        #  the num of features wouldn't exceed <max_num_of_features> features
+
         if self.DATAFRAME:
             tokenized_df = pd.DataFrame(index=full_df.index)
             for col, value in zip(vectorizer.get_feature_names(), transformed_array.toarray().T):
