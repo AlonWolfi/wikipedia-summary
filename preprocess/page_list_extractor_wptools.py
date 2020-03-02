@@ -19,6 +19,12 @@ class PageListExtractorTask(luigi.Task):
             for member in data['members']:
                 print(member['title'])
                 self.pages.add(member['title'])
+
+                # cache results
+                if len(self.pages) % 100 == 0:
+                    if os.path.exists(self.output().path):
+                        os.remove(self.output().path)
+                    save_data('\n'.join(self.pages), self.output().path)
             return
 
         if self.DEBUG:
@@ -28,13 +34,11 @@ class PageListExtractorTask(luigi.Task):
             print(cat['title'])
             self.__get_category(cat['title'])
 
-    def run(self):
-        # Read xml
 
+    def run(self):
         self.pages = set()
 
         starting_category = 'Category:Musicians by band'
-
         self.__get_category(starting_category)
 
         save_data('\n'.join(self.pages), self.output().path)

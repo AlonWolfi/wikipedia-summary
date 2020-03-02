@@ -9,6 +9,9 @@ PROJECT_NAME = 'wikipedia-summary'
 CONFIG_FILE = 'config.json'
 CONFIG = None
 
+import matplotlib.pyplot as plt
+
+
 
 def get_project_dir() -> Path:
     '''
@@ -94,6 +97,8 @@ def read_data(file_path: Union[str, Path], is_dataframe=True, encoding: str = "u
     elif file_path.suffix == '.json':
         with open(file_path, 'rb') as file:
             data = json.load(file)
+    elif file_path.suffix == '.jpg' or file_path.suffix == '.png':
+        data = plt.imread(file_path)
     else:
         with open(file_path, 'r+', encoding=encoding) as file:
             print(file_path)

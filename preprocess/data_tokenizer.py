@@ -55,4 +55,4 @@ class DataTokenizer(luigi.Task):
             save_data(transformed_array, self.output().path)
 
 if __name__ == '__main__':
-    luigi.test_task(DataTokenizer)
+    luigi.run_task(DataTokenizer)

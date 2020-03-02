@@ -1,5 +1,5 @@
 {
   "DEBUG": true,
-  "DATAFRAME": false,
+  "DATAFRAME": true,
   "DELETE_CACHE": false
 }
