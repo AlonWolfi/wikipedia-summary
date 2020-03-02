@@ -94,6 +94,9 @@ def read_data(file_path: Union[str, Path], is_dataframe=True, encoding: str = "u
 
     data = None
 
+    if not os.path.exists(file_path):
+        return None
+
     if file_path.suffix == '.pickle':
         with open(file_path, 'rb') as file:
             data = pickle.load(file)

@@ -16,11 +16,13 @@ from utils.utils import *
 
 
 class DataExtractor(luigi.Task):
+    output_path = 'full_df.pickle'
+
     def requires(self):
         return PageListExtractorTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('full_df.pickle'))
+        return luigi.LocalTarget(get_file_path(self.output_path))
 
     @staticmethod
     def _get_df(page_index, content_lst, infoboxes_lst):
@@ -40,10 +42,22 @@ class DataExtractor(luigi.Task):
         page_index = []
         content_lst = []
         infoboxes_lst = []
+
+        if get_from_config('SUBCACHE'):
+            cached_df = read_data(get_file_path(self.output_path, 'subcache'))
+            if cached_df:
+                page_index = list(cached_df.index)
+                content_lst = list(cached_df['text'])
+                infoboxes_lst = list(cached_df['infobox'])
+
         for i, p in enumerate(pages_lst):
+            if p in page_index:
+                continue
+
             doc = load_text(p)
             if doc is None:
                 continue
+
             infobox = load_info_box(p)
             if infobox is None:
                 continue
@@ -53,9 +67,10 @@ class DataExtractor(luigi.Task):
             infoboxes_lst.append(infobox)
 
             # cache data
-            if i % 50 == 0:
-                df_cache = self._get_df(page_index, content_lst, infoboxes_lst)
-                save_data(df_cache, self.output().path)
+            if get_from_config('SUBCACHE'):
+                if i % 50 == 0:
+                    df_cache = self._get_df(page_index, content_lst, infoboxes_lst)
+                    save_data(df_cache, get_file_path(self.output_path, 'subcache'))
 
         df = self._get_df(page_index, content_lst, infoboxes_lst)
         save_data(df, self.output().path)

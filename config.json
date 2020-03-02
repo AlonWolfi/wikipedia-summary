@@ -1,5 +1,6 @@
 {
   "DEBUG": false,
   "DATAFRAME": true,
+  "SUBCACHE": true,
   "DELETE_CACHE": false
 }

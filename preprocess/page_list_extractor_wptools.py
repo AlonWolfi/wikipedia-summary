@@ -21,8 +21,9 @@ class PageListExtractorTask(luigi.Task):
                 self.pages.add(member['title'])
 
                 # cache results
-                if len(self.pages) % 50 == 0:
-                    save_data('\n'.join(self.pages), self.output().path)
+                if get_from_config('SUBCACHE'):
+                    if len(self.pages) % 50 == 0:
+                        save_data('\n'.join(self.pages), self.output().path)
             return
 
         if self.DEBUG:
@@ -31,7 +32,6 @@ class PageListExtractorTask(luigi.Task):
         for cat in subcategories:
             print(cat['title'])
             self.__get_category(cat['title'])
-
 
     def run(self):
         self.pages = set()
