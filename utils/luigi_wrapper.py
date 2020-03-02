@@ -40,6 +40,7 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
             shutil.rmtree(get_project_dir() / 'cache')
         else:
             output_path = task.output(task).path
+            validate_path(output_path)
             if os.path.exists(output_path):
                 os.remove(output_path)
     luigi.build(

@@ -22,6 +22,15 @@ class DataExtractor(luigi.Task):
     def output(self):
         return luigi.LocalTarget(get_file_path('full_df.pickle'))
 
+    @staticmethod
+    def _get_df(page_index, content_lst, infoboxes_lst):
+        df: pd.DataFrame() = pd.DataFrame()
+        df['page'] = page_index
+        df['text'] = content_lst
+        df['infobox'] = infoboxes_lst
+        df = df.set_index('page')
+        return df
+
     def run(self):
         pages_lst = self.requires().get_output().split('\n')
 
@@ -31,7 +40,7 @@ class DataExtractor(luigi.Task):
         page_index = []
         content_lst = []
         infoboxes_lst = []
-        for p in pages_lst:
+        for i, p in enumerate(pages_lst):
             doc = load_text(p)
             if doc is None:
                 continue
@@ -43,17 +52,12 @@ class DataExtractor(luigi.Task):
             content_lst.append(doc)
             infoboxes_lst.append(infobox)
 
-        df: pd.DataFrame() = pd.DataFrame()
+            # cache data
+            if i % 50 == 0:
+                df_cache = self._get_df(page_index, content_lst, infoboxes_lst)
+                save_data(df_cache, self.output().path)
 
-        print(pages_lst)
-
-        df['page'] = page_index
-        df['text'] = content_lst
-        df['infobox'] = infoboxes_lst
-        df = df.set_index('page')
-
-        print(df.index)
-
+        df = self._get_df(page_index, content_lst, infoboxes_lst)
         save_data(df, self.output().path)
 
 

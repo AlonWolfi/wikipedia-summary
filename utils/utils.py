@@ -67,6 +67,9 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
 
     validate_path(file_path)
 
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
     if file_path.suffix == '.pickle':
         with open(file_path, 'wb') as file:
             print(file_path)

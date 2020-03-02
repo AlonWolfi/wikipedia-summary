@@ -21,9 +21,7 @@ class PageListExtractorTask(luigi.Task):
                 self.pages.add(member['title'])
 
                 # cache results
-                if len(self.pages) % 100 == 0:
-                    if os.path.exists(self.output().path):
-                        os.remove(self.output().path)
+                if len(self.pages) % 50 == 0:
                     save_data('\n'.join(self.pages), self.output().path)
             return
 
