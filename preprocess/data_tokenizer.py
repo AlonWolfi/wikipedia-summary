@@ -14,6 +14,8 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 
 class DataTokenizer(luigi.Task):
+    NOT_FREQ_TOKEN_THRESH = get_from_config('NOT_FREQ_TOKEN_THRESH')
+
     def requires(self):
         return DataExtractor()
 
@@ -29,11 +31,18 @@ class DataTokenizer(luigi.Task):
 
     @classmethod
     def __get_vocabulary(cls, texts) -> set:
-        vocab: set = set()
+        vocab: dict = dict()
         for doc in texts:
-            tokens = cls.tokenize_doc(doc)
-            vocab = vocab.union(tokens)
+            tokens = set(cls.tokenize_doc(doc))
+            for t in tokens:
+                if t in vocab.keys():
+                    vocab[t] += 1
+                else:
+                    vocab[t] = 1
+        vocab = [key for key, value in vocab.items() if value > cls.NOT_FREQ_TOKEN_THRESH * len(texts)]
+            
         return vocab
+           
 
     def run(self):
         full_df = self.requires().get_output()

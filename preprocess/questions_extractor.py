@@ -12,6 +12,8 @@ from utils.utils import *
 
 
 class QuestionsExtractor(luigi.Task):
+    NOT_FREQ_LABEL_THRESH = get_from_config('NOT_FREQ_LABEL_THRESH')
+
     def requires(self):
         return DataExtractor()
 
@@ -22,14 +24,37 @@ class QuestionsExtractor(luigi.Task):
     def __get_questions_from_infobox(infobox):
         return list(infobox.keys())
 
+    @classmethod
+    def __filter_small_classes(cls, questions):
+        labels = {}
+        for q in questions:
+            for label in q:
+                if label in labels.keys():
+                    labels[label] += 1
+                else:
+                    labels[label] = 1
+
+        labels = [key for key, value in labels.items() if value > cls.NOT_FREQ_LABEL_THRESH]
+
+        filtered_questions = []
+        for q in questions:
+            filtered_q = []
+            for label in q:
+                if label in labels:
+                    filtered_q.append(label)
+            filtered_questions.append(filtered_q)
+
+        return filtered_questions
+
     def run(self):
         full_df = self.requires().get_output()
 
         questions = full_df['infobox'].apply(self.__get_questions_from_infobox)
+        filtered_questions = self.__filter_small_classes(questions)
 
         vectorizer = MultiLabelBinarizer()
-        vectorizer.fit(questions)
-        transformed_array = vectorizer.transform(questions)
+        vectorizer.fit(filtered_questions)
+        transformed_array = vectorizer.transform(filtered_questions)
 
         if self.DATAFRAME:
             df_questions = pd.DataFrame(index=full_df.index)

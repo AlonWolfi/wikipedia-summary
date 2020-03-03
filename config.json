@@ -2,5 +2,7 @@
   "DEBUG": false,
   "DATAFRAME": true,
   "SUBCACHE": true,
-  "DELETE_CACHE": false
+  "DELETE_CACHE": false,
+  "NOT_FREQ_TOKEN_THRESH": 0.01,
+  "NOT_FREQ_LABEL_THRESH": 30
 }
