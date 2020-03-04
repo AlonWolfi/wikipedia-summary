@@ -26,12 +26,12 @@ from utils.utils import *
 
 class plotROCTask(luigi.Task):
     PLOT_ALL_ROCS = luigi.BoolParameter(default=False)
-    model = luigi.Parameter(default=LinearRegression())
 
     def requires(self):
-        return QuestionsModel(
-                model=self.model
-            )
+        return {
+            'y_true': QuestionsLabelExtractor(),
+            'y_pred': QuestionsModel()
+        }
 
     def output(self):
         return luigi.LocalTarget(get_file_path(f"questions_ROC.jpg", 'visualizations'))
@@ -131,9 +131,8 @@ class plotROCTask(luigi.Task):
         return f
 
     def run(self):
-        input = self.input()
-        self.y_true = input['y_test']
-        self.y_pred = input['y_pred']
+        self.y_true = self.requires()['y_true'].load_outputs()
+        self.y_pred = self.requires()['y_pred'].load_outputs()
 
         # metrics
         self.print_metrics(self.y_true, self.y_pred)
@@ -150,5 +149,4 @@ class plotROCTask(luigi.Task):
 
 # General TODO - add prior for questions
 if __name__ == '__main__':
-
     luigi.run_task(plotROCTask())

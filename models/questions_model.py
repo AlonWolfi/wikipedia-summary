@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import hamming_loss, precision_score, precision_recall_curve
 from sklearn import svm, datasets
 from sklearn.metrics import roc_curve, auc
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_predict
 from sklearn.preprocessing import label_binarize
 from sklearn.multiclass import OneVsRestClassifier
 from scipy import interp
@@ -19,12 +19,11 @@ import utils.luigi_wrapper as luigi
 
 from preprocess.data_tokenizer import DataTokenizer
 from preprocess.questions_label_extractor import QuestionsLabelExtractor
+from sklearn.multiclass import OneVsRestClassifier
 from utils.utils import *
 
 
 class QuestionsModel(luigi.Task):
-    PLOT_ALL_ROCS = luigi.BoolParameter(default=False)
-    model = luigi.Parameter(default=LinearRegression())
 
     def requires(self):
         return {
@@ -33,10 +32,7 @@ class QuestionsModel(luigi.Task):
         }
 
     def output(self):
-        return {
-            'y_test': luigi.LocalTarget(get_file_path('y_test.pickle', 'data')),
-            'y_pred': luigi.LocalTarget(get_file_path('y_pred.pickle', 'predictions'))
-        }
+        return luigi.LocalTarget(get_file_path('y_pred.pickle', 'predictions'))
 
     @staticmethod
     def __random_features(X, random_features_size=1000):
@@ -56,19 +52,27 @@ class QuestionsModel(luigi.Task):
         # Preprocess
         # X = self.__random_features(X)
 
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.3,
-                                                                                shuffle=True)
+        # self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.3,
+        #
+        #                                                                         # fit & pred
+        #         model.fit(self.X_train, self.y_train)
+        #
+        #         self.y_test_pred = model.predict(self.X_test)shuffle=True)
         # Choose model
-        # TODO - try different moodels and add grid search
-        model = LinearRegression()
+        # TODO - try different models and add grid search
+        model = LogisticRegression()
 
-        # fit & pred
-        model.fit(self.X_train, self.y_train)
+        self.y_test_pred = None
 
-        self.y_test_pred = model.predict(self.X_test)
+        for c in range(self.y.shape[1]):
+            y_c = self.y[:, c]
+            y_c_pred = cross_val_predict(model, self.X, y_c, cv=2).reshape((-1, 1))
+            if self.y_test_pred is not None:
+                self.y_test_pred = np.append(self.y_test_pred, y_c_pred, axis=1)
+            else:
+                self.y_test_pred = y_c_pred
 
-        save_data(self.y_test, self.output()['y_test'].path)
-        save_data(self.y_test_pred, self.output()['y_pred'].path)
+        save_data(self.y_test_pred, self.output().path)
 
 
 # General TODO - add prior for questions
