@@ -19,16 +19,18 @@ class Task(luigi.Task):
         return LocalTarget(self.__get_task_done_path())
 
     @classmethod
-    def get_output(cls):
+    def load_outputs(cls):
         ins = cls()
-        output_path = ins.output().path
-        print(f"'{cls.__name__}' output's path is {output_path}")
-        return read_data(output_path)
+        return loop_through_iterable(ins.output(), lambda output: read_data(output.path))
+
+    def input(self):
+        return self.requires().load_outputs()
 
     @classmethod
     def task_done(cls):
+        empty_file = ''
         file_path = cls.__get_task_done_path()
-        save_data('', file_path)
+        save_data(empty_file, file_path)
 
     def run(self):
         self.task_done()
@@ -39,15 +41,18 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
         if delete_all:
             shutil.rmtree(get_project_dir() / 'cache')
         else:
-            output_path = task.output(task).path
-            validate_path(output_path)
-            if os.path.exists(output_path):
-                os.remove(output_path)
+            def remove_cache(output_path):
+                validate_path(output_path)
+                if os.path.exists(output_path):
+                    os.remove(output_path)
+
+            loop_through_iterable(task.output(), remove_cache)
+
     luigi.build(
         [
-            task()
+            task
         ],
         local_scheduler=local_scheduler
     )
     print(f"#### output ####")
-    print(task.get_output())
+    print(task.load_outputs())

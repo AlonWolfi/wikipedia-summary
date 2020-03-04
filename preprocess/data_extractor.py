@@ -1,15 +1,8 @@
-import os
-import glob
-import nltk
-import gensim
-import pandas as pd
-import wikipedia
-import wikipediaapi
-import wptools
+import numpy as np
 
 import utils.luigi_wrapper as luigi
 
-from preprocess.page_list_extractor_wptools import PageListExtractorTask
+from preprocess.wikipedia_list_extractor import WikipediaListExtractorTask
 
 from utils.wikipedia_utils import *
 from utils.utils import *
@@ -19,14 +12,14 @@ class DataExtractor(luigi.Task):
     output_path = 'full_df.pickle'
 
     def requires(self):
-        return PageListExtractorTask()
+        return WikipediaListExtractorTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path(self.output_path))
+        return luigi.LocalTarget(get_file_path(self.output_path, 'raw_data'))
 
     @staticmethod
     def _get_df(page_index, content_lst, infoboxes_lst):
-        df: pd.DataFrame() = pd.DataFrame()
+        df: pd.DataFrame = pd.DataFrame()
         df['page'] = page_index
         df['text'] = content_lst
         df['infobox'] = infoboxes_lst
@@ -34,7 +27,7 @@ class DataExtractor(luigi.Task):
         return df
 
     def run(self):
-        pages_lst = self.requires().get_output().split('\n')
+        pages_lst = self.input().split('\n')
 
         if self.DEBUG:
             pages_lst = pages_lst[:50]
@@ -43,34 +36,43 @@ class DataExtractor(luigi.Task):
         content_lst = []
         infoboxes_lst = []
 
+        bad_pages = []
+
         if get_from_config('SUBCACHE'):
             cached_df = read_data(get_file_path(self.output_path, 'subcache'))
-            if cached_df:
+            if cached_df is not None:
                 page_index = list(cached_df.index)
                 content_lst = list(cached_df['text'])
                 infoboxes_lst = list(cached_df['infobox'])
 
-        for i, p in enumerate(pages_lst):
-            if p in page_index:
+            bad_pages_file = read_data(get_file_path('bad_pages.txt', 'subcache'))
+            if bad_pages_file is not None:
+                bad_pages = bad_pages_file.split('\n')
+
+        for p in pages_lst:
+            if p in page_index or p in bad_pages:
                 continue
+
+            # cache data
+            if get_from_config('SUBCACHE'):
+                if np.random.randint(50) == 0:
+                    df_cache = self._get_df(page_index, content_lst, infoboxes_lst)
+                    save_data(df_cache, get_file_path(self.output_path, 'subcache'))
+                    save_data('\n'.join(bad_pages), get_file_path('bad_pages.txt', 'subcache'))
 
             doc = load_text(p)
             if doc is None:
+                bad_pages.append(p)
                 continue
 
             infobox = load_info_box(p)
             if infobox is None:
+                bad_pages.append(p)
                 continue
 
             page_index.append(p)
             content_lst.append(doc)
             infoboxes_lst.append(infobox)
-
-            # cache data
-            if get_from_config('SUBCACHE'):
-                if i % 50 == 0:
-                    df_cache = self._get_df(page_index, content_lst, infoboxes_lst)
-                    save_data(df_cache, get_file_path(self.output_path, 'subcache'))
 
         df = self._get_df(page_index, content_lst, infoboxes_lst)
         save_data(df, self.output().path)

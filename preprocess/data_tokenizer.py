@@ -20,7 +20,7 @@ class DataTokenizer(luigi.Task):
         return DataExtractor()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('tokenized_array.pickle'))
+        return luigi.LocalTarget(get_file_path('tokenized_array.pickle', 'data'))
 
     @staticmethod
     def tokenize_doc(doc):
@@ -45,7 +45,7 @@ class DataTokenizer(luigi.Task):
            
 
     def run(self):
-        full_df = self.requires().get_output()
+        full_df = self.input()
 
         vocab = self.__get_vocabulary(full_df['text'])
 

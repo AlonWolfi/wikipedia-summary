@@ -1,6 +1,6 @@
 {
   "DEBUG": false,
-  "DATAFRAME": true,
+  "DATAFRAME": false,
   "SUBCACHE": true,
   "DELETE_CACHE": false,
   "NOT_FREQ_TOKEN_THRESH": 0.01,

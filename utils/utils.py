@@ -43,11 +43,14 @@ def get_from_config(element: str):
     return get_config()[element]
 
 
-def get_file_path(file_name: str, dir_name: str = 'cache'):
-    if dir_name == '':
-        return get_project_dir() / file_name
+def get_file_path(file_name: str, dir_name: str = None):
+    CACHE_FOLDER = 'cache'
+    if dir_name:
+        return get_project_dir() / CACHE_FOLDER / dir_name / file_name
+    else:
+        return get_project_dir() / CACHE_FOLDER / file_name
 
-    return get_project_dir() / dir_name / file_name
+
 
 
 def validate_path(file_path: Union[str, Path]):
@@ -57,6 +60,24 @@ def validate_path(file_path: Union[str, Path]):
         except:
             os.mkdir(dir)
 
+def loop_through_iterable(iterable, func_for_ins):
+    if type(iterable) == dict:
+        outputs = dict()
+        for k, v in iterable.items():
+            outputs[k] = loop_through_iterable(v, func_for_ins)
+        return outputs
+    elif type(iterable) == list:
+        outputs = list()
+        for ele in iterable:
+            outputs.append(loop_through_iterable(ele, func_for_ins))
+        return outputs
+    elif type(iterable) == set:
+        outputs = set()
+        for ele in iterable:
+            outputs.add(loop_through_iterable(ele, func_for_ins))
+        return outputs
+    else:
+        return func_for_ins(iterable)
 
 def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
     '''
@@ -72,8 +93,6 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
 
     if file_path.suffix == '.pickle':
         with open(file_path, 'wb') as file:
-            print(file_path)
-            print(file)
             pickle.dump(data, file)
     elif file_path.suffix == '.json':
         with open(file_path, 'wb') as file:
