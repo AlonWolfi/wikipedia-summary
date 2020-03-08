@@ -20,7 +20,7 @@ import utils.luigi_wrapper as luigi
 
 from preprocess.data_tokenizer import DataTokenizer
 from preprocess.questions_label_extractor import QuestionsLabelExtractor
-from models.questions_model import QuestionsModel
+from questions_models.create_predictions import QuestionsModel
 from utils.utils import *
 
 
