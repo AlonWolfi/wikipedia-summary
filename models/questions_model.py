@@ -22,6 +22,55 @@ from preprocess.questions_label_extractor import QuestionsLabelExtractor
 from sklearn.multiclass import OneVsRestClassifier
 from utils.utils import *
 
+from sklearn.base import BaseEstimator
+
+import importlib
+
+import lightgbm as lgb
+
+class TrainerOptimizer:
+    def __init__(self, models_dict: dict):
+        self.models_dict = models_dict
+
+    @staticmethod
+    def load_model(model_path: str) -> BaseEstimator:
+        lib_path, model_path = model_path.rsplit(1)
+        lib = importlib.import_module(lib_path)
+        return getattr(lib, model_path)
+
+    def get_best_model(self):
+        pass
+
+class OptunaTrainerOptimizer(TrainerOptimizer):
+
+    @staticmethod
+    def optuna_objective(trial, X, y):
+        model: BaseEstimator = lgb.sklearn.LGBMClassifier()
+        params = {
+            'objective': 'binary',
+            'metric': 'binary_logloss',
+            'verbosity': -1,
+            'boosting_type': 'gbdt',
+            'lambda_l1': trial.suggest_loguniform('lambda_l1', 1e-8, 10.0),
+            'lambda_l2': trial.suggest_loguniform('lambda_l2', 1e-8, 10.0),
+            'num_leaves': trial.suggest_int('num_leaves', 2, 256),
+            'feature_fraction': trial.suggest_uniform('feature_fraction', 0.4, 1.0),
+            'bagging_fraction': trial.suggest_uniform('bagging_fraction', 0.4, 1.0),
+            'bagging_freq': trial.suggest_int('bagging_freq', 1, 7),
+            'min_child_samples': trial.suggest_int('min_child_samples', 5, 100),
+        }
+
+        model.set_params(**params)
+
+        y_pred = cross_val_predict(model, X, y, method='predict_proba')
+
+        score = roc_auc_score(y, y_pred)
+        return score
+
+    def get_best_model(self):
+
+        pass
+
 
 class QuestionsModel(luigi.Task):
 
@@ -49,28 +98,10 @@ class QuestionsModel(luigi.Task):
         print(f'X.shape is {self.X.shape}')
         print(f'y.shape is {self.y.shape}')
 
-        # Preprocess
-        # X = self.__random_features(X)
-
-        # self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.3,
-        #
-        #                                                                         # fit & pred
-        #         model.fit(self.X_train, self.y_train)
-        #
-        #         self.y_test_pred = model.predict(self.X_test)shuffle=True)
         # Choose model
-        # TODO - try different models and add grid search
-        model = LogisticRegression()
+        model = OneVsRestClassifier(LogisticRegression())
+        self.y_test_pred = cross_val_predict(model, self.X, y_c, cv=3, method='predict_proba')
 
-        self.y_test_pred = None
-
-        for c in range(self.y.shape[1]):
-            y_c = self.y[:, c]
-            y_c_pred = cross_val_predict(model, self.X, y_c, cv=2).reshape((-1, 1))
-            if self.y_test_pred is not None:
-                self.y_test_pred = np.append(self.y_test_pred, y_c_pred, axis=1)
-            else:
-                self.y_test_pred = y_c_pred
 
         save_data(self.y_test_pred, self.output().path)
 

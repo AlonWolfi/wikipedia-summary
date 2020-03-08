@@ -24,7 +24,7 @@ from models.questions_model import QuestionsModel
 from utils.utils import *
 
 
-class plotROCTask(luigi.Task):
+class PlotROCTask(luigi.Task):
     PLOT_ALL_ROCS = luigi.BoolParameter(default=False)
 
     def requires(self):
@@ -149,4 +149,4 @@ class plotROCTask(luigi.Task):
 
 # General TODO - add prior for questions
 if __name__ == '__main__':
-    luigi.run_task(plotROCTask())
+    luigi.run_task(PlotROCTask())

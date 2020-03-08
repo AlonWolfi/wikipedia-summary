@@ -11,6 +11,10 @@ class Task(luigi.Task):
     DEBUG = luigi.BoolParameter(significant=True, default=get_from_config('DEBUG'))
     DATAFRAME = luigi.BoolParameter(significant=True, default=get_from_config('DATAFRAME'))
 
+    def __init__(self):
+        super(Task, self).__init__()
+        self.config = get_config()
+
     @classmethod
     def __get_task_done_path(cls):
         return get_project_dir() / 'cache' / (cls.__name__ + '.done')
@@ -24,7 +28,7 @@ class Task(luigi.Task):
         return loop_through_iterable(ins.output(), lambda output: read_data(output.path))
 
     def input(self):
-        return self.requires().load_outputs()
+        return super(self.input()).load_outputs()
 
     @classmethod
     def task_done(cls):
