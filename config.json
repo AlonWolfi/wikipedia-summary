@@ -5,7 +5,8 @@
     "delete_cache": false
   },
   "extraction": {
-    "subcache": true
+    "subcache": true,
+    "initial_category": "Category:Musicians"
   },
   "preprocess": {
     "is_data_dataframe": false,

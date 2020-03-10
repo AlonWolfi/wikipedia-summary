@@ -11,9 +11,6 @@ class WikipediaListExtractionTask(luigi.Task):
     @return: saves a txt file with the list of all pages
     '''
 
-    # The category within to do the crawl
-    initial_category = luigi.Parameter(default='Category:Musicians')
-
     def output(self):
         return luigi.LocalTarget(get_file_path('wikipedia_page_list.txt', 'raw_data'))
 
@@ -55,7 +52,7 @@ class WikipediaListExtractionTask(luigi.Task):
     def run(self):
         self.pages = set()
 
-        self.__get_category(self.initial_category)
+        self.__get_category(self.config['extraction']['initial_category'])
 
         save_data('\n'.join(self.pages), self.output().path)
 
