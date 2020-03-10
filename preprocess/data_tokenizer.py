@@ -45,7 +45,7 @@ class DataTokenizer(luigi.Task):
            
 
     def run(self):
-        full_df = self.input()
+        full_df = self.get_inputs()
 
         vocab = self.__get_vocabulary(full_df['text'])
 
@@ -67,4 +67,4 @@ class DataTokenizer(luigi.Task):
             save_data(transformed_array, self.output().path)
 
 if __name__ == '__main__':
-    luigi.run_task(DataTokenizer)
+    luigi.run_task(DataTokenizer())
