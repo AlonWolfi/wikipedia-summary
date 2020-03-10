@@ -1,9 +1,3 @@
-import os
-import glob
-import nltk
-import gensim
-import pandas as pd
-import wikipedia
 import wikipediaapi
 import wptools
 

@@ -2,17 +2,17 @@ import numpy as np
 
 import utils.luigi_wrapper as luigi
 
-from extraction.wikipedia_list_extraction import WikipediaListExtractorTask
+from extraction.wikipedia_list_extraction import WikipediaListExtractionTask
 
 from utils.wikipedia_utils import *
 from utils.utils import *
 
 
-class DataExtractor(luigi.Task):
+class DataExtractionTask(luigi.Task):
     output_path = 'full_df.pickle'
 
     def requires(self):
-        return WikipediaListExtractorTask()
+        return WikipediaListExtractionTask()
 
     def output(self):
         return luigi.LocalTarget(get_file_path(self.output_path, 'raw_data'))
@@ -79,4 +79,4 @@ class DataExtractor(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(DataExtractor)
+    luigi.run_task(DataExtractionTask)

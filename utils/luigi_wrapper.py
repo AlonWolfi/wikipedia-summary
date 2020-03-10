@@ -25,8 +25,10 @@ class Task(luigi.Task):
         ins = cls()
         return loop_through_iterable(ins.output(), lambda _output: read_data(_output.path))
 
-    def get_inputs(self):
-        return loop_through_iterable(self.input(), lambda _input: read_data(_input.path))
+    @classmethod
+    def get_inputs(cls):
+        ins = cls()
+        return loop_through_iterable(ins.input(), lambda _input: read_data(_input.path))
 
     @classmethod
     def task_done(cls):
@@ -35,6 +37,7 @@ class Task(luigi.Task):
         save_data(empty_file, file_path)
 
     def save(self, data):
+        # TODO - make work for more than one file (now only works if output is of LocalTarget type)
         return save_data(data, self.output().path)
 
     def run(self):

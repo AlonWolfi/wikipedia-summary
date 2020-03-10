@@ -37,6 +37,7 @@ def get_config():
         # loads config
         with open(config_path) as json_file:
             CONFIG = json.load(json_file)
+
     return CONFIG
 
 
@@ -81,6 +82,33 @@ def loop_through_iterable(iterable, func_for_ins):
         return outputs
     else:
         return func_for_ins(iterable)
+
+def loop_through_iterables_list(iterables_list, func_for_ins):
+    # TODO - finish it sometimes - for now leave alone
+    # Check all are the same type
+    iterable_type = type(iterables_list[0])
+    if any([type(iterable) != iterable_type for iterable in iterables_list]):
+        print(f'Iterables list must be in the same type : {iterable_type}')
+        raise Exception
+    if iterable_type == dict:
+        outputs_list = [dict() for i in iterables_list]
+        # for kvs in zip(*[d.items() for d in iterables_list]):
+        #     for i, (k, v) in enumerate(kvs):
+        #
+        #     outputs_list[k] = loop_through_iterables_list(v, func_for_ins)
+        return outputs_list
+    elif iterable_type == list:
+        outputs = list()
+        # for ele in iterable:
+        #     outputs.append(loop_through_iterable(ele, func_for_ins))
+        return outputs
+    elif iterable_type == set:
+        outputs = set()
+        # for ele in iterable:
+        #     outputs.add(loop_through_iterable(ele, func_for_ins))
+        return outputs
+    # else:
+    #     return func_for_ins(iterable)
 
 
 def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):

@@ -1,20 +1,16 @@
-import utils.luigi_wrapper as luigi
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
 from sklearn.preprocessing import MultiLabelBinarizer
 
-stop_words = set(stopwords.words('english'))
-porter = PorterStemmer()
-
-from extraction.data_extraction import DataExtractor
+import utils.luigi_wrapper as luigi
 from utils.utils import *
 
+from extraction.data_extraction import DataExtractionTask
 
-class QuestionsLabelExtractor(luigi.Task):
+
+class QuestionsLabelExtractionTask(luigi.Task):
     NOT_FREQ_LABEL_THRESH = get_from_config('NOT_FREQ_LABEL_THRESH', 'preprocess')
 
     def requires(self):
-        return DataExtractor()
+        return DataExtractionTask()
 
     def output(self):
         return luigi.LocalTarget(get_file_path('question_labels.pickle', 'old__data'))
@@ -65,4 +61,4 @@ class QuestionsLabelExtractor(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(QuestionsLabelExtractor())
+    luigi.run_task(QuestionsLabelExtractionTask())

@@ -1,22 +1,14 @@
-import nltk
 import numpy as np
 
 import utils.luigi_wrapper as luigi
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
-
-stop_words = set(stopwords.words('english'))
-porter = PorterStemmer()
-
-from preprocess.data_tokenization import DataTokenizer
 from utils.utils import *
 
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from preprocess.data_tokenization import DataTokenizationTask
 
 
 class FeatureSelectionTask(luigi.Task):
     def requires(self):
-        return DataTokenizer()
+        return DataTokenizationTask()
 
     def output(self):
         return luigi.LocalTarget(get_file_path('final_data.pickle', 'old__data'))

@@ -1,22 +1,21 @@
 import numpy as np
 
-from sklearn.metrics import roc_curve, auc
 from scipy import interp
+from sklearn.metrics import roc_curve, auc
 
 import utils.luigi_wrapper as luigi
-
-from preprocess.questions_label_extraction import QuestionsLabelExtractor
-from questions_models.create_predictions import QuestionsModel
 from utils.utils import *
+
+from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
+from questions_model.create_predictions import QuestionsMakePredictionsTask
 
 
 class PlotROCTask(luigi.Task):
-    PLOT_ALL_ROCS = luigi.BoolParameter(default=False)
 
     def requires(self):
         return {
-            'y_true': QuestionsLabelExtractor(),
-            'y_pred': QuestionsModel()
+            'y_true': QuestionsLabelExtractionTask(),
+            'y_pred': QuestionsMakePredictionsTask()
         }
 
     def output(self):
@@ -24,7 +23,7 @@ class PlotROCTask(luigi.Task):
 
     @staticmethod
     def print_metrics(y_true, y_pred):
-        # print("Accuracy = ",accuracy_score(y,y_pred))
+        # print("Accuracy = ",accuracy_score(y_true,y_pred))
         # print("f1_micro = ", f1_score(y_true, y_pred, average="micro"))
         # print("f1_macro = ", f1_score(y_true, y_pred, average="macro"))
         # print("f1_weighted = ", f1_score(y_true, y_pred, average="weighted"))
@@ -109,9 +108,9 @@ class PlotROCTask(luigi.Task):
 
     def plot_ROCs(self, fpr, tpr, roc_auc, lw=2) -> plt.Figure:
         self._plot_agg_ROCs(fpr, tpr, roc_auc)
-        if self.PLOT_ALL_ROCS:
+        if self.config['visualization']['plot_all_ROCs']:
             self._plot_all_ROCs(fpr, tpr, roc_auc, lw)
-        self._set_ROC_axis(lw, self.PLOT_ALL_ROCS)
+        self._set_ROC_axis(lw, self.config['visualization']['plot_all_ROCs'])
         f = plt.gcf()
         plt.show()
         return f

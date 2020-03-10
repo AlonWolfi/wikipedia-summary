@@ -20,7 +20,7 @@ class LogisticRegressionModel(Model):
     def model(self):
         return sklearn.linear_model.LogisticRegression()
 
-    def params(self, trial) -> dict:
+    def params(self, trial):
         param = {
             'penalty': trial.suggest_categorical('penalty', ['none', 'l2']),
             'C': trial.suggest_loguniform('C', 0.001, 10),
@@ -34,7 +34,7 @@ class LGBModel(Model):
     def model(self):
         return lgb.sklearn.LGBMClassifier()
 
-    def params(self, trial) -> dict:
+    def params(self, trial):
         param = {
             'objective': 'binary',
             'metric': 'binary_logloss',
@@ -56,7 +56,7 @@ class XGBModel(Model):
     def model(self):
         return xgb.sklearn.XGBClassifier()
 
-    def params(self, trial) -> dict:
+    def params(self, trial):
         param = {
             'silent': 1,
             'objective': 'binary:logistic',

@@ -1,12 +1,3 @@
-import re
-import os
-import json
-from pathlib import Path
-from typing import Union, Iterable
-
-from utils.utils import get_project_dir
-
-
 def get_lines_generator(lines):
     '''
     yields each line of text

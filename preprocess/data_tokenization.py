@@ -1,23 +1,23 @@
 import nltk
-
-import utils.luigi_wrapper as luigi
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
 stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
-from extraction.data_extraction import DataExtractor
-from utils.utils import *
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+import utils.luigi_wrapper as luigi
+from utils.utils import *
 
-class DataTokenizer(luigi.Task):
+from extraction.data_extraction import DataExtractionTask
+
+
+class DataTokenizationTask(luigi.Task):
     NOT_FREQ_TOKEN_THRESH = get_from_config('NOT_FREQ_TOKEN_THRESH', 'preprocess')
 
     def requires(self):
-        return DataExtractor()
+        return DataExtractionTask()
 
     def output(self):
         return luigi.LocalTarget(get_file_path('tokenized_array.pickle', 'old__data'))
@@ -68,4 +68,4 @@ class DataTokenizer(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(DataTokenizer())
+    luigi.run_task(DataTokenizationTask())

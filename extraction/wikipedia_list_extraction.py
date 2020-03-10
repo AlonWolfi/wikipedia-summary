@@ -3,7 +3,7 @@ import utils.luigi_wrapper as luigi
 from utils.utils import *
 
 
-class WikipediaListExtractorTask(luigi.Task):
+class WikipediaListExtractionTask(luigi.Task):
     '''
     This task crawls through a Category within wikipedia and will make a list of all wikipedia pages.
     If there are sub-categories in the categories it will crawl inside them and will return all pages.
@@ -61,4 +61,4 @@ class WikipediaListExtractorTask(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(WikipediaListExtractorTask())
+    luigi.run_task(WikipediaListExtractionTask())

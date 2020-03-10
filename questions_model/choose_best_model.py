@@ -8,19 +8,19 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import roc_auc_score
 from sklearn.multiclass import OneVsRestClassifier
 
-from questions_models.questions_models_config import get_models, Model
-from preprocess.feature_selection import FeatureSelectionTask
-from preprocess.questions_label_extraction import QuestionsLabelExtractor
-
 from utils.utils import *
 
+from questions_model.questions_models_config import get_models, Model
+from preprocess.feature_selection import FeatureSelectionTask
+from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
 
-class TrainerOptimizer:
+
+class ParamOptimizer:
     def __init__(self, models_dict: dict):
         self.models_dict = models_dict
 
     @staticmethod
-    def load_model(model_path: str) -> BaseEstimator:
+    def load_model_from_path(model_path: str) -> BaseEstimator:
         lib_path, model_path = model_path.rsplit('.', 1)
         lib = importlib.import_module(lib_path)
         return getattr(lib, model_path)
@@ -29,10 +29,10 @@ class TrainerOptimizer:
         pass
 
 
-class OptunaTrainerOptimizer(TrainerOptimizer):
+class OptunaParamOptimizer(ParamOptimizer):
 
     def __init__(self, model_dict, X, y):
-        super(OptunaTrainerOptimizer, self).__init__(model_dict)
+        super(OptunaParamOptimizer, self).__init__(model_dict)
         self.X = X
         self.y = y
 
@@ -69,28 +69,28 @@ class OptunaTrainerOptimizer(TrainerOptimizer):
         return best_clf
 
 
-class ModelSelectionTask(luigi.Task):
+class QuestionsModelSelectionTask(luigi.Task):
     def requires(self):
         return {
             'X': FeatureSelectionTask(),
-            'y': QuestionsLabelExtractor()
+            'y': QuestionsLabelExtractionTask()
         }
 
     def output(self):
         return luigi.LocalTarget(get_file_path('best_estimator.pickle', 'question_model'))
 
     def run(self):
-        self.X = self.requires()['X'].get_outputs()
-        self.y = self.requires()['y'].get_outputs()
+        X = self.requires()['X'].get_outputs()
+        y = self.requires()['y'].get_outputs()
 
         if self.config['preprocess']['is_data_dataframe']:
-            self.X = self.X.to_numpy()
-            self.y = self.y.to_numpy()
+            X = X.to_numpy()
+            y = y.to_numpy()
 
-        print(f'X.shape is {self.X.shape}')
-        print(f'y.shape is {self.y.shape}')
-        trainer = OptunaTrainerOptimizer(get_models(), self.X, self.y)
+        print(f'X.shape is {X.shape}')
+        print(f'y.shape is {y.shape}')
+        param_optimizer = OptunaParamOptimizer(get_models(), X, y)
 
-        best_clf = trainer.get_best_model()
+        best_clf = param_optimizer.get_best_model()
 
         self.save(best_clf)
