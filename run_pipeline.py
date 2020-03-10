@@ -1,6 +1,9 @@
 import utils.luigi_wrapper as luigi
 
+from utils.utils import get_from_config
+
 from visualization.plotROC import PlotROCTask
+
 
 class PipelineEnd(luigi.Task):
     def requires(self):
@@ -8,5 +11,4 @@ class PipelineEnd(luigi.Task):
 
 
 if __name__ == '__main__':
-    x = PlotROCTask()
-    luigi.run_task(x, local_scheduler=True, delete_all=False)
+    luigi.run_task(PlotROCTask(), local_scheduler=get_from_config('luigi_local_scheduler'), delete_all=False)

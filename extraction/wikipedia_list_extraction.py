@@ -39,18 +39,18 @@ class WikipediaListExtractorTask(luigi.Task):
                 self.pages.add(member['title'])
 
                 # cache results
-                if get_from_config('SUBCACHE'):
+                if self.config['extraction']['subcache']:
                     if len(self.pages) % 50 == 0:
                         save_data('\n'.join(self.pages), self.output().path)
             return
 
         # For DEBUG - smaller subcategories
-        if self.DEBUG:
+        if self.config['debug']['DEBUG']:
             subcategories = subcategories[:20]
 
         for cat in subcategories:
             print(f"Entered to Wikipedia Category : {cat['title']}")
-            self.__get_category(cat['itle'])
+            self.__get_category(cat['title'])
 
     def run(self):
         self.pages = set()

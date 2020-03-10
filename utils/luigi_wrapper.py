@@ -8,8 +8,6 @@ from utils.utils import *
 
 
 class Task(luigi.Task):
-    DEBUG = luigi.BoolParameter(significant=True, default=get_from_config('DEBUG'))
-    DATAFRAME = luigi.BoolParameter(significant=True, default=get_from_config('DATAFRAME'))
 
     def __init__(self):
         super(Task, self).__init__()
@@ -44,7 +42,7 @@ class Task(luigi.Task):
 
 
 def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False):
-    if get_from_config('DELETE_CACHE'):
+    if get_from_config('delete_cache', 'debug'):
         if delete_all:
             shutil.rmtree(get_project_dir() / 'cache')
         else:

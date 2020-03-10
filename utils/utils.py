@@ -40,8 +40,11 @@ def get_config():
     return CONFIG
 
 
-def get_from_config(element: str):
-    return get_config()[element]
+def get_from_config(element: str, category: str = None):
+    if category:
+        return get_config()[category][element]
+    else:
+        return get_config()[element]
 
 
 def get_file_path(file_name: str, dir_name: str = None):
@@ -105,7 +108,7 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
             file.write(data)
 
 
-def read_data(file_path: Union[str, Path], is_dataframe=True, encoding: str = "utf-8"):
+def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
     '''
     Saves text to file
     '''

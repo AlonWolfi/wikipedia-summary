@@ -3,7 +3,7 @@ from sklearn.model_selection import cross_val_predict
 import utils.luigi_wrapper as luigi
 
 from preprocess.feature_selection import FeatureSelectionTask
-from extraction.questions_label_extractor import QuestionsLabelExtractor
+from preprocess.questions_label_extraction import QuestionsLabelExtractor
 
 from utils.utils import *
 
@@ -27,7 +27,7 @@ class QuestionsModel(luigi.Task):
         self.y = self.requires()['y'].get_outputs()
         self.best_model = self.requires()['best_model'].get_outputs()
 
-        if self.DATAFRAME:
+        if self.config['preprocess']['is_data_dataframe']:
             self.X = self.X.to_numpy()
             self.y = self.y.to_numpy()
 

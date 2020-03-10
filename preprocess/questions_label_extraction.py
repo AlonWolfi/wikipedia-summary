@@ -6,12 +6,12 @@ from sklearn.preprocessing import MultiLabelBinarizer
 stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
-from extraction.data_extractor import DataExtractor
+from extraction.data_extraction import DataExtractor
 from utils.utils import *
 
 
 class QuestionsLabelExtractor(luigi.Task):
-    NOT_FREQ_LABEL_THRESH = get_from_config('NOT_FREQ_LABEL_THRESH')
+    NOT_FREQ_LABEL_THRESH = get_from_config('NOT_FREQ_LABEL_THRESH', 'preprocess')
 
     def requires(self):
         return DataExtractor()
@@ -55,7 +55,7 @@ class QuestionsLabelExtractor(luigi.Task):
         vectorizer.fit(filtered_questions)
         transformed_array = vectorizer.transform(filtered_questions)
 
-        if self.DATAFRAME:
+        if self.config['preprocess']['is_data_dataframe']:
             df_questions = pd.DataFrame(index=full_df.index)
             for col, value in zip(vectorizer.classes_, transformed_array.T):
                 df_questions[col] = value

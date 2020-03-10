@@ -8,7 +8,7 @@ from nltk.stem.porter import PorterStemmer
 stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
-from preprocess.data_tokenizer import DataTokenizer
+from preprocess.data_tokenization import DataTokenizer
 from utils.utils import *
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -26,7 +26,7 @@ class FeatureSelectionTask(luigi.Task):
 
         feature_indices = np.random.choice(np.arange(X.shape[1]), size=1000)
 
-        if self.DATAFRAME:
+        if self.config['preprocess']['is_data_dataframe']:
             X = X.iloc[:, feature_indices]
         else:
             X = X[:, feature_indices]

@@ -1,8 +1,15 @@
 {
-  "DEBUG": false,
-  "DATAFRAME": false,
-  "SUBCACHE": true,
-  "DELETE_CACHE": false,
-  "NOT_FREQ_TOKEN_THRESH": 0.01,
-  "NOT_FREQ_LABEL_THRESH": 30
+  "luigi_local_scheduler": false,
+  "debug": {
+    "DEBUG": false,
+    "delete_cache": false
+  },
+  "extraction": {
+    "subcache": true
+  },
+  "preprocess": {
+    "is_data_dataframe": false,
+    "NOT_FREQ_LABEL_THRESH": 30,
+    "NOT_FREQ_TOKEN_THRESH": 0.01
+  }
 }

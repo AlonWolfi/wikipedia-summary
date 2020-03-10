@@ -2,7 +2,7 @@ import numpy as np
 
 import utils.luigi_wrapper as luigi
 
-from extraction.wikipedia_list_extractor import WikipediaListExtractorTask
+from extraction.wikipedia_list_extraction import WikipediaListExtractorTask
 
 from utils.wikipedia_utils import *
 from utils.utils import *
@@ -29,7 +29,7 @@ class DataExtractor(luigi.Task):
     def run(self):
         pages_lst = self.input().split('\n')
 
-        if self.DEBUG:
+        if self.config['debug']['DEBUG']:
             pages_lst = pages_lst[:50]
 
         page_index = []
@@ -38,7 +38,7 @@ class DataExtractor(luigi.Task):
 
         bad_pages = []
 
-        if get_from_config('SUBCACHE'):
+        if self.config['extraction']['subcache']:
             cached_df = read_data(get_file_path(self.output_path, 'subcache'))
             if cached_df is not None:
                 page_index = list(cached_df.index)
@@ -54,7 +54,7 @@ class DataExtractor(luigi.Task):
                 continue
 
             # cache old__data
-            if get_from_config('SUBCACHE'):
+            if self.config['extraction']['subcache']:
                 if np.random.randint(50) == 0:
                     df_cache = self._get_df(page_index, content_lst, infoboxes_lst)
                     save_data(df_cache, get_file_path(self.output_path, 'subcache'))

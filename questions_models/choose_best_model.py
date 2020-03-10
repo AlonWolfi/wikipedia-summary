@@ -10,7 +10,7 @@ from sklearn.multiclass import OneVsRestClassifier
 
 from questions_models.questions_models_config import get_models, Model
 from preprocess.feature_selection import FeatureSelectionTask
-from extraction.questions_label_extractor import QuestionsLabelExtractor
+from preprocess.questions_label_extraction import QuestionsLabelExtractor
 
 from utils.utils import *
 
@@ -83,7 +83,7 @@ class ModelSelectionTask(luigi.Task):
         self.X = self.requires()['X'].get_outputs()
         self.y = self.requires()['y'].get_outputs()
 
-        if self.DATAFRAME:
+        if self.config['preprocess']['is_data_dataframe']:
             self.X = self.X.to_numpy()
             self.y = self.y.to_numpy()
 
