@@ -19,7 +19,7 @@ class FeatureSelectionTask(luigi.Task):
         return DataTokenizer()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('final_data.pickle', 'data'))
+        return luigi.LocalTarget(get_file_path('final_data.pickle', 'old__data'))
 
     def run(self):
         X = self.get_inputs()

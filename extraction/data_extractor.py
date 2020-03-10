@@ -2,7 +2,7 @@ import numpy as np
 
 import utils.luigi_wrapper as luigi
 
-from preprocess.wikipedia_list_extractor import WikipediaListExtractorTask
+from extraction.wikipedia_list_extractor import WikipediaListExtractorTask
 
 from utils.wikipedia_utils import *
 from utils.utils import *
@@ -53,7 +53,7 @@ class DataExtractor(luigi.Task):
             if p in page_index or p in bad_pages:
                 continue
 
-            # cache data
+            # cache old__data
             if get_from_config('SUBCACHE'):
                 if np.random.randint(50) == 0:
                     df_cache = self._get_df(page_index, content_lst, infoboxes_lst)

@@ -1,25 +1,11 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import hamming_loss, precision_score, precision_recall_curve
-from sklearn import svm, datasets
 from sklearn.metrics import roc_curve, auc
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import label_binarize
-from sklearn.multiclass import OneVsRestClassifier
 from scipy import interp
-from sklearn.metrics import roc_auc_score
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LinearRegression
 import utils.luigi_wrapper as luigi
 
-from preprocess.data_tokenizer import DataTokenizer
-from preprocess.questions_label_extractor import QuestionsLabelExtractor
+from extraction.questions_label_extractor import QuestionsLabelExtractor
 from questions_models.create_predictions import QuestionsModel
 from utils.utils import *
 
@@ -131,8 +117,8 @@ class PlotROCTask(luigi.Task):
         return f
 
     def run(self):
-        self.y_true = self.requires()['y_true'].load_outputs()
-        self.y_pred = self.requires()['y_pred'].load_outputs()
+        self.y_true = self.requires()['y_true'].get_outputs()
+        self.y_pred = self.requires()['y_pred'].get_outputs()
 
         # metrics
         self.print_metrics(self.y_true, self.y_pred)

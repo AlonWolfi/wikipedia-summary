@@ -24,7 +24,7 @@ class WikipediaListExtractorTask(luigi.Task):
         Will add all pages to self.pages (set)
         @return: None
         '''
-        # Gets the data within the wiki page
+        # Gets the old__data within the wiki page
         wiki_data = wptools.category(category_name).get_members().data
 
         try:

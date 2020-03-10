@@ -23,18 +23,21 @@ class Task(luigi.Task):
         return LocalTarget(self.__get_task_done_path())
 
     @classmethod
-    def load_outputs(cls):
+    def get_outputs(cls):
         ins = cls()
-        return loop_through_iterable(ins.output(), lambda output: read_data(output.path))
+        return loop_through_iterable(ins.output(), lambda _output: read_data(_output.path))
 
-    def input(self):
-        return super(self.input()).load_outputs()
+    def get_inputs(self):
+        return loop_through_iterable(self.input(), lambda _input: read_data(_input.path))
 
     @classmethod
     def task_done(cls):
         empty_file = ''
         file_path = cls.__get_task_done_path()
         save_data(empty_file, file_path)
+
+    def save(self, data):
+        return save_data(data, self.output().path)
 
     def run(self):
         self.task_done()
@@ -59,4 +62,4 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
         local_scheduler=local_scheduler
     )
     print(f"#### output ####")
-    print(task.load_outputs())
+    print(task.get_outputs())

@@ -12,7 +12,7 @@ INSTANCE_LINK_RE = '^\*\[\[([^\]]*)\]\]'
 
 class PageListValidation(luigi.Task):
     def output(self):
-        return luigi.LocalTarget(get_file_path('page_list.xml', 'data'))
+        return luigi.LocalTarget(get_file_path('page_list.xml', 'old__data'))
 
     def run(self):
         pass

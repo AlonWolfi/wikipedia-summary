@@ -6,8 +6,7 @@ from sklearn.preprocessing import MultiLabelBinarizer
 stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
-from preprocess.data_extractor import DataExtractor
-from preprocess.old__wikipedia_list_extractor_xml import WikipediaListExtractorTask
+from extraction.data_extractor import DataExtractor
 from utils.utils import *
 
 
@@ -18,7 +17,7 @@ class QuestionsLabelExtractor(luigi.Task):
         return DataExtractor()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('question_labels.pickle', 'data'))
+        return luigi.LocalTarget(get_file_path('question_labels.pickle', 'old__data'))
 
     @staticmethod
     def __get_questions_from_infobox(infobox):
@@ -47,7 +46,7 @@ class QuestionsLabelExtractor(luigi.Task):
         return filtered_questions
 
     def run(self):
-        full_df = self.requires().load_outputs()
+        full_df = self.requires().get_outputs()
 
         questions = full_df['infobox'].apply(self.__get_questions_from_infobox)
         filtered_questions = self.__filter_small_classes(questions)
@@ -66,4 +65,4 @@ class QuestionsLabelExtractor(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(QuestionsLabelExtractor)
+    luigi.run_task(QuestionsLabelExtractor())

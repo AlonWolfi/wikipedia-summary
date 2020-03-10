@@ -7,10 +7,10 @@ from nltk.stem.porter import PorterStemmer
 stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
-from preprocess.data_extractor import DataExtractor
+from extraction.data_extractor import DataExtractor
 from utils.utils import *
 
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 class DataTokenizer(luigi.Task):
@@ -20,7 +20,7 @@ class DataTokenizer(luigi.Task):
         return DataExtractor()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('tokenized_array.pickle', 'data'))
+        return luigi.LocalTarget(get_file_path('tokenized_array.pickle', 'old__data'))
 
     @staticmethod
     def tokenize_doc(doc):

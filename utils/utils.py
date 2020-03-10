@@ -5,12 +5,13 @@ import pandas as pd
 from pathlib import Path
 from typing import Union, Iterable
 
+from matplotlib.pyplot import Figure
+
 PROJECT_NAME = 'wikipedia-summary'
 CONFIG_FILE = 'config.json'
 CONFIG = None
 
 import matplotlib.pyplot as plt
-
 
 
 def get_project_dir() -> Path:
@@ -51,14 +52,13 @@ def get_file_path(file_name: str, dir_name: str = None):
         return get_project_dir() / CACHE_FOLDER / file_name
 
 
-
-
 def validate_path(file_path: Union[str, Path]):
     for dir in list(file_path.parents)[::-1]:
         try:
             os.stat(dir)
         except:
             os.mkdir(dir)
+
 
 def loop_through_iterable(iterable, func_for_ins):
     if type(iterable) == dict:
@@ -79,6 +79,7 @@ def loop_through_iterable(iterable, func_for_ins):
     else:
         return func_for_ins(iterable)
 
+
 def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
     '''
     Saves text to file
@@ -91,12 +92,14 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
     if os.path.exists(file_path):
         os.remove(file_path)
 
-    if file_path.suffix == '.pickle':
+    elif file_path.suffix == '.pickle':
         with open(file_path, 'wb') as file:
             pickle.dump(data, file)
     elif file_path.suffix == '.json':
         with open(file_path, 'wb') as file:
             json.dump(data, file)
+    elif type(data) == Figure:
+        data.save_fig(file_path)
     else:
         with open(file_path, 'w+', encoding=encoding) as file:
             file.write(data)
