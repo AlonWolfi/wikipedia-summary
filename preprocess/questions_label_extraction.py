@@ -5,6 +5,10 @@ from utils.utils import *
 
 from extraction.data_extraction import DataExtractionTask
 
+from nltk.stem.porter import PorterStemmer
+porter = PorterStemmer()
+
+
 
 class QuestionsLabelExtractionTask(luigi.Task):
     NOT_FREQ_LABEL_THRESH = get_from_config('NOT_FREQ_LABEL_THRESH', 'preprocess')
@@ -17,8 +21,10 @@ class QuestionsLabelExtractionTask(luigi.Task):
 
     @staticmethod
     def __get_questions_from_infobox(infobox):
-        return list(infobox.keys())
-
+        questions_cleaned = [porter.stem(w) for w in list(infobox.keys())]
+        return questions_cleaned
+    
+   
     @classmethod
     def __filter_small_classes(cls, questions):
         labels = {}
@@ -40,7 +46,7 @@ class QuestionsLabelExtractionTask(luigi.Task):
             filtered_questions.append(filtered_q)
 
         return filtered_questions
-
+    
     def run(self):
         full_df = self.requires().get_outputs()
 

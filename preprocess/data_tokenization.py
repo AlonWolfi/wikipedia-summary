@@ -23,33 +23,47 @@ class DataTokenizationTask(luigi.Task):
         return luigi.LocalTarget(get_file_path('tokenized_array.pickle', 'old__data'))
 
     @staticmethod
-    def tokenize_doc(doc):
+    def tokenize_doc(doc, vocab=None):
         tokens = nltk.word_tokenize(doc)
         tokens = [w for w in tokens if not w in stop_words]
         tokens = [porter.stem(w) for w in tokens]
+        if vocab:
+            tokens = [w for w in tokens if w in vocab]
         return list(tokens)
 
     @classmethod
-    # TODO - delete function - unused
     def __get_vocabulary(cls, texts) -> set:
-        vocab: dict = dict()
+        words_dict = dict()
         for doc in texts:
             tokens = set(cls.tokenize_doc(doc))
             for t in tokens:
-                if t in vocab.keys():
-                    vocab[t] += 1
+                if t in words_dict.keys():
+                    words_dict[t] += 1
                 else:
-                    vocab[t] = 1
-        vocab: set = {key for key, value in vocab.items() if value > cls.NOT_FREQ_TOKEN_THRESH * len(texts)}
+                    words_dict[t] = 1
+        vocab: set = set([key for key, value in words_dict.items() if value > cls.NOT_FREQ_TOKEN_THRESH * len(texts)])
+
+        return vocab
+    
+    def get_vocabulary(cls, texts) -> set:
+        words_dict = dict()
+        for doc in texts:
+            tokens = set(cls.tokenize_doc(doc))
+            for t in tokens:
+                if t in words_dict.keys():
+                    words_dict[t] += 1
+                else:
+                    words_dict[t] = 1
+        vocab: set = set([key for key, value in words_dict.items() if value > cls.NOT_FREQ_TOKEN_THRESH * len(texts)])
 
         return vocab
 
     def run(self):
         full_df = self.get_inputs()
 
-        # vocab = self.__get_vocabulary(full_df['text'])
+        vocab = self.__get_vocabulary(full_df['text'])
 
-        tokenized_text = full_df['text'].apply(lambda text: ' '.join(self.tokenize_doc(text)))
+        tokenized_text = full_df['text'].apply(lambda text: ' '.join(self.tokenize_doc(text, vocab=vocab)))
 
         vectorizer = TfidfVectorizer()
         vectorizer.fit(tokenized_text)
