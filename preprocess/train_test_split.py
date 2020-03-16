@@ -14,7 +14,7 @@ class TrainTestSplitTask(luigi.Task):
         return DataExtractionTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('train_test_dict.json', 'old__data'))
+        return luigi.LocalTarget(get_file_path('train_test_dict.pickle', 'old__data'))
 
     def run(self):
         train_test_dict = dict()

@@ -19,7 +19,7 @@ class PlotROCTask(luigi.Task):
         }
 
     def output(self):
-        return luigi.LocalTarget(get_file_path(f"questions_ROC.jpg", 'visualizations'))
+        return luigi.LocalTarget(get_file_path(f"questions_ROC.png", 'visualizations'))
 
     @staticmethod
     def print_metrics(y_true, y_pred):

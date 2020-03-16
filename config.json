@@ -15,6 +15,6 @@
     "TEST_SIZE": 0.2
   },
   "visualization": {
-    "plot_all_ROCs": true
+    "plot_all_ROCs": false
   }
 }
