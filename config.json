@@ -11,7 +11,8 @@
   "preprocess": {
     "is_data_dataframe": false,
     "NOT_FREQ_LABEL_THRESH": 30,
-    "NOT_FREQ_TOKEN_THRESH": 0.01
+    "NOT_FREQ_TOKEN_THRESH": 0.01,
+    "TEST_SIZE": 0.2
   },
   "visualization": {
     "plot_all_ROCs": true

@@ -6,7 +6,7 @@ from utils.utils import *
 from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
 from questions_model.create_predictions import QuestionsMakePredictionsTask
 
-class FeatureSelectionTask(luigi.Task):
+class PriorTask(luigi.Task):
     def requires(self):
         return {'y': QuestionsLabelExtractionTask(),
                 'y_pred': QuestionsMakePredictionsTask()}
@@ -44,4 +44,4 @@ class FeatureSelectionTask(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(FeatureSelectionTask())
+    luigi.run_task(PriorTask())
