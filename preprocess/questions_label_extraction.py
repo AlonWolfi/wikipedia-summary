@@ -6,8 +6,8 @@ from utils.utils import *
 from extraction.data_extraction import DataExtractionTask
 
 from nltk.stem.porter import PorterStemmer
-porter = PorterStemmer()
 
+porter = PorterStemmer()
 
 
 class QuestionsLabelExtractionTask(luigi.Task):
@@ -17,14 +17,13 @@ class QuestionsLabelExtractionTask(luigi.Task):
         return DataExtractionTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('question_labels.pickle', 'old__data'))
+        return luigi.LocalTarget(get_file_path('question_labels.pickle', 'data'))
 
     @staticmethod
     def __get_questions_from_infobox(infobox):
         questions_cleaned = [porter.stem(w) for w in list(infobox.keys())]
         return questions_cleaned
-    
-   
+
     @classmethod
     def __filter_small_classes(cls, questions):
         labels = {}
@@ -46,7 +45,7 @@ class QuestionsLabelExtractionTask(luigi.Task):
             filtered_questions.append(filtered_q)
 
         return filtered_questions
-    
+
     def run(self):
         full_df = self.requires().get_outputs()
 

@@ -14,17 +14,17 @@ class TrainTestSplitTask(luigi.Task):
         return DataExtractionTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('train_test_dict.pickle', 'old__data'))
+        return luigi.LocalTarget(get_file_path('train_test_dict.pickle', 'data'))
 
     def run(self):
         train_test_dict = dict()
         full_df = self.requires().get_outputs()
 
-        train_indexes, test_indexes = train_test_split(list(range(len(full_df))), test_size=self.TEST_SIZE)
-        train_test_dict['train_indexes'] = train_indexes
-        train_test_dict['test_indexes'] = test_indexes
-        train_test_dict['train_pages'] = list(full_df.iloc[train_indexes].index)
-        train_test_dict['test_pages'] = list(full_df.iloc[test_indexes].index)
+        train_indices, test_indices = train_test_split(list(range(len(full_df))), test_size=self.TEST_SIZE)
+        train_test_dict['train_indices'] = train_indices
+        train_test_dict['test_indices'] = test_indices
+        train_test_dict['train_pages'] = list(full_df.iloc[train_indices].index)
+        train_test_dict['test_pages'] = list(full_df.iloc[test_indices].index)
 
         save_data(train_test_dict, self.output().path)
 

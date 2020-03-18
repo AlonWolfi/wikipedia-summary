@@ -1,18 +1,21 @@
 {
-  "luigi_local_scheduler": false,
+  "luigi_local_scheduler": true,
   "debug": {
-    "DEBUG": false,
+    "DEBUG": true,
     "delete_cache": false
   },
   "extraction": {
     "subcache": true,
-    "initial_category": "Category:Musicians"
+    "initial_category": "Category:Actors"
   },
   "preprocess": {
     "is_data_dataframe": false,
     "NOT_FREQ_LABEL_THRESH": 30,
     "NOT_FREQ_TOKEN_THRESH": 0.01,
     "TEST_SIZE": 0.2
+  },
+  "questions_model": {
+    "one_vs_rest": true
   },
   "visualization": {
     "plot_all_ROCs": false

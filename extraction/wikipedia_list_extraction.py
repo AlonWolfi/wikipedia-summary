@@ -10,9 +10,10 @@ class WikipediaListExtractionTask(luigi.Task):
     @param initial_category: The category within to do the crawl
     @return: saves a txt file with the list of all pages
     '''
+    output_path = 'wikipedia_page_list.txt'
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('wikipedia_page_list.txt', 'raw_data'))
+        return luigi.LocalTarget(get_file_path(self.output_path, 'raw_data'))
 
     def __get_category(self, category_name):
         '''
@@ -37,8 +38,8 @@ class WikipediaListExtractionTask(luigi.Task):
 
                 # cache results
                 if self.config['extraction']['subcache']:
-                    if len(self.pages) % 50 == 0:
-                        save_data('\n'.join(self.pages), self.output().path)
+                    if len(self.pages) % 100 == 0:
+                        save_data('\n'.join(self.pages), get_file_path(self.output_path, 'subcache'))
             return
 
         # For DEBUG - smaller subcategories
@@ -51,6 +52,12 @@ class WikipediaListExtractionTask(luigi.Task):
 
     def run(self):
         self.pages = set()
+
+        if self.config['extraction']['subcache']:
+            try:
+                self.pages = set(read_data(get_file_path(self.output_path, 'subcache')).split('\n'))
+            except:
+                self.pages = set(read_data(get_file_path('full_df.pickle', 'subcache')).index)
 
         self.__get_category(self.config['extraction']['initial_category'])
 

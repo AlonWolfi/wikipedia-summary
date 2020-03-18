@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+import time
 import pandas as pd
 from pathlib import Path
 from typing import Union, Iterable
@@ -83,6 +84,7 @@ def loop_through_iterable(iterable, func_for_ins):
     else:
         return func_for_ins(iterable)
 
+
 def loop_through_iterables_list(iterables_list, func_for_ins):
     # TODO - finish it sometimes - for now leave alone
     # Check all are the same type
@@ -122,6 +124,8 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
 
     if os.path.exists(file_path):
         os.remove(file_path)
+        # to fix writing after deleting
+        time.sleep(1)
 
     elif file_path.suffix == '.pickle':
         with open(file_path, 'wb') as file:
@@ -134,6 +138,7 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
     else:
         with open(file_path, 'w+', encoding=encoding) as file:
             file.write(data)
+
 
 
 def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
@@ -157,9 +162,8 @@ def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
         with open(file_path, 'rb') as file:
             data = json.load(file)
     elif file_path.suffix == '.jpg' or file_path.suffix == '.png':
-        data = plt.imread(file_path)
+        data = plt.imread(file_path, format='PNG')
     else:
         with open(file_path, 'r+', encoding=encoding) as file:
-            print(file_path)
             data = file.read()
     return data

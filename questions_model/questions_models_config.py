@@ -4,9 +4,10 @@ import sklearn
 import optuna
 
 from sklearn.base import BaseEstimator
+from sklearn.multiclass import OneVsRestClassifier
 
 
-class Model:
+class OptunaModel:
     @property
     def model(self) -> BaseEstimator:
         raise NotImplementedError
@@ -15,7 +16,7 @@ class Model:
         raise NotImplementedError
 
 
-class LogisticRegressionModel(Model):
+class LogisticRegressionModel(OptunaModel):
     @property
     def model(self):
         return sklearn.linear_model.LogisticRegression()
@@ -29,7 +30,19 @@ class LogisticRegressionModel(Model):
         return param
 
 
-class LGBModel(Model):
+class SVCModel(OptunaModel):
+    @property
+    def model(self):
+        return sklearn.svm.SVC(probability=True)
+
+    def params(self, trial):
+        param = {
+            'C': trial.suggest_loguniform('C', 1e-10, 1e10)
+        }
+        return param
+
+
+class LGBModel(OptunaModel):
     @property
     def model(self):
         return lgb.sklearn.LGBMClassifier()
@@ -51,7 +64,7 @@ class LGBModel(Model):
         return param
 
 
-class XGBModel(Model):
+class XGBModel(OptunaModel):
     @property
     def model(self):
         return xgb.sklearn.XGBClassifier()
@@ -79,7 +92,9 @@ class XGBModel(Model):
 
 def get_models():
     return {
-        # 'logistic': LogisticRegressionModel(),
-        'lgb': LGBModel(),
+        'logistic': LogisticRegressionModel(),
+        # TODO - SVC is not Working !!!
+        # 'svc': SVCModel(),
+        # 'lgb': LGBModel(),
         # 'xgb': XGBModel()
     }

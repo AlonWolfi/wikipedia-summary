@@ -27,14 +27,14 @@ class QuestionsMakePredictionsTask(luigi.Task):
         X = self.requires()['X'].get_outputs()
         y = self.requires()['y'].get_outputs()
         best_model = self.requires()['best_model'].get_outputs()
-        train_indexes = self.requires()['train_test_split'].get_outputs()['train_indexes']
+        train_indices = self.requires()['train_test_split'].get_outputs()['train_indices']
 
         if self.config['preprocess']['is_data_dataframe']:
             X = X.to_numpy()
             y = y.to_numpy()
 
-        x_train = X[train_indexes]
-        y_train = y[train_indexes]
+        x_train = X[train_indices]
+        y_train = y[train_indices]
 
         model = best_model.fit(x_train, y_train)
         y_pred = model.predict_proba(X)

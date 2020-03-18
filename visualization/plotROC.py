@@ -8,6 +8,7 @@ from utils.utils import *
 
 from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
 from questions_model.create_predictions import QuestionsMakePredictionsTask
+from questions_model.prior import QuestionsPredictionsAfterPriorTask
 
 
 class PlotROCTask(luigi.Task):
@@ -15,7 +16,7 @@ class PlotROCTask(luigi.Task):
     def requires(self):
         return {
             'y_true': QuestionsLabelExtractionTask(),
-            'y_pred': QuestionsMakePredictionsTask()
+            'y_pred': QuestionsPredictionsAfterPriorTask()
         }
 
     def output(self):

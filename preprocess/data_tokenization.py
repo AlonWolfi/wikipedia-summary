@@ -20,7 +20,7 @@ class DataTokenizationTask(luigi.Task):
         return DataExtractionTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('tokenized_array.pickle', 'old__data'))
+        return luigi.LocalTarget(get_file_path('tokenized_array.pickle', 'data'))
 
     @staticmethod
     def tokenize_doc(doc, vocab=None):
@@ -44,7 +44,8 @@ class DataTokenizationTask(luigi.Task):
         vocab: set = set([key for key, value in words_dict.items() if value > cls.NOT_FREQ_TOKEN_THRESH * len(texts)])
 
         return vocab
-    
+
+    @classmethod
     def get_vocabulary(cls, texts) -> set:
         words_dict = dict()
         for doc in texts:
@@ -68,9 +69,6 @@ class DataTokenizationTask(luigi.Task):
         vectorizer = TfidfVectorizer()
         vectorizer.fit(tokenized_text)
         transformed_array = vectorizer.transform(tokenized_text)
-
-        # TODO - remove highly-frequent and highly-un-frequent tokens such that
-        #  the num of features wouldn't exceed <max_num_of_features> features
 
         if self.config['preprocess']['is_data_dataframe']:
             tokenized_df = pd.DataFrame(index=full_df.index)
