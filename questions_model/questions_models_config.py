@@ -26,6 +26,7 @@ class LogisticRegressionModel(OptunaModel):
             'penalty': trial.suggest_categorical('penalty', ['none', 'l2']),
             'C': trial.suggest_loguniform('C', 0.001, 10),
             'tol': trial.suggest_uniform('tol', 0.00001, 0.0002),
+            'class_weight': 'balanced'
         }
         return param
 

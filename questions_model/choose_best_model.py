@@ -5,14 +5,16 @@ import utils.luigi_wrapper as luigi
 
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, f1_score
 from sklearn.multiclass import OneVsRestClassifier
 
 from utils.utils import *
 
 from questions_model.questions_models_config import get_models, OptunaModel
+from preprocess.data_tokenization import DataTokenizationTask
 from preprocess.feature_selection import FeatureSelectionTask
 from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
+from preprocess.train_test_split import TrainTestSplitTask
 
 
 class ParamOptimizer:
@@ -49,9 +51,9 @@ class OptunaParamOptimizer(ParamOptimizer):
         if self.one_vs_rest:
             model = OneVsRestClassifier(model, n_jobs=-1)
 
-        y_pred = cross_val_predict(model, self.X, self.y, cv=3, method='predict_proba')
+        y_pred = cross_val_predict(model, self.X, self.y, cv=3)
 
-        score = roc_auc_score(self.y, y_pred)
+        score = f1_score(self.y, y_pred, average='macro')
 
         return score
 
@@ -76,14 +78,16 @@ class OptunaParamOptimizer(ParamOptimizer):
 class QuestionsModelSelectionTask(luigi.Task):
     def requires(self):
         return {
-            'X': FeatureSelectionTask(),
-            'y': QuestionsLabelExtractionTask()
+            'X': DataTokenizationTask(),
+            'y': QuestionsLabelExtractionTask(),
+            'train_test_split': TrainTestSplitTask()
         }
 
     def output(self):
         return luigi.LocalTarget(get_file_path('best_estimator.pickle', 'question_model'))
 
     def run(self):
+        train_test_split = self.get_inputs()['train_test_split']
         X = self.requires()['X'].get_outputs()
         y = self.requires()['y'].get_outputs()
 
@@ -94,9 +98,12 @@ class QuestionsModelSelectionTask(luigi.Task):
         if self.config['debug']['DEBUG']:
             y = y[:, :5]
 
+        X_train = X[train_test_split['train_indices']]
+        y_train = y[train_test_split['train_indices']]
+
         print(f'X.shape is {X.shape}')
         print(f'y.shape is {y.shape}')
-        param_optimizer = OptunaParamOptimizer(get_models(), X, y, self.config['questions_model']['one_vs_rest'])
+        param_optimizer = OptunaParamOptimizer(get_models(), X_train, y_train, self.config['questions_model']['one_vs_rest'])
 
         best_clf = param_optimizer.get_best_model()
 

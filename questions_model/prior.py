@@ -33,27 +33,50 @@ class QuestionsPredictionsAfterPriorTask(luigi.Task):
     def run_prior_on_prediction(p_ij, prediction):
         sum_prediction = sum(prediction)
         priored_prediction = []
+        prior_shift = 0
+        all_counter = 0
+        one_counter = 0
         for i in range(len(prediction)):
             p_i_new = 0
             Z = 0
             for j in range(len(prediction)):
-                prior_shift = np.log2(p_ij[i, j] / (p_ij[j, j]) + 1) # * sum_prediction
-                p_i_new += prediction[j] * prior_shift
-                Z += prior_shift
-            p_i_new /= Z
+                if j == i:
+                    continue
+                if prediction[j] > 0.5:
+                    prior_shift = np.ceil(p_ij[i, j])
+                if prior_shift == 1:
+                    one_counter += 1
+                    break
 
-            p_i_new *= prediction[i]
+            all_counter += 1
+
+                # prior_shift = np.log2(p_ij[i, j] / (p_ij[j, j]) + 1) # * sum_prediction
+                # p_i_new += prediction[j] * prior_shift
+                # Z += prior_shift
+            # normalization
+            # p_i_new /= Z
+            p_i_new = prior_shift * prediction[i]
+
+            # multiply by first prediction
+            # p_i_new *= prediction[i]
 
             # p_i_new += prediction[i]
             # p_i_new /= 2
 
             priored_prediction.append(p_i_new)
+
+        print(f'one_counter: {one_counter}')
+        print(f'all counter: {all_counter}')
+
         return priored_prediction
 
     def run(self):
         y_pred = self.get_inputs()['y_pred']
         y = self.get_inputs()['y']
         train_indices = self.get_inputs()['train_test_split']['train_indices']
+
+        if self.config['preprocess']['is_data_dataframe']:
+            y = y.to_numpy()
 
         p_ij = self.get_prior(y[train_indices])
 
@@ -63,4 +86,4 @@ class QuestionsPredictionsAfterPriorTask(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(PriorTask())
+    luigi.run_task(QuestionsPredictionsAfterPriorTask())

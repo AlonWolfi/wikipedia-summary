@@ -4,6 +4,7 @@ import utils.luigi_wrapper as luigi
 
 from utils.utils import *
 
+from preprocess.data_tokenization import DataTokenizationTask
 from preprocess.feature_selection import FeatureSelectionTask
 from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
 from questions_model.choose_best_model import QuestionsModelSelectionTask
@@ -14,7 +15,7 @@ class QuestionsMakePredictionsTask(luigi.Task):
 
     def requires(self):
         return {
-            'X': FeatureSelectionTask(),
+            'X': DataTokenizationTask(),
             'y': QuestionsLabelExtractionTask(),
             'best_model': QuestionsModelSelectionTask(),
             'train_test_split': TrainTestSplitTask()

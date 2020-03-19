@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy import interp
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, f1_score
 
 import utils.luigi_wrapper as luigi
 from utils.utils import *
@@ -9,6 +9,7 @@ from utils.utils import *
 from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
 from questions_model.create_predictions import QuestionsMakePredictionsTask
 from questions_model.prior import QuestionsPredictionsAfterPriorTask
+from preprocess.train_test_split import TrainTestSplitTask
 
 
 class PlotROCTask(luigi.Task):
@@ -16,7 +17,8 @@ class PlotROCTask(luigi.Task):
     def requires(self):
         return {
             'y_true': QuestionsLabelExtractionTask(),
-            'y_pred': QuestionsPredictionsAfterPriorTask()
+            'y_pred': QuestionsPredictionsAfterPriorTask(),
+            'train_test_split': TrainTestSplitTask()
         }
 
     def output(self):
@@ -26,7 +28,7 @@ class PlotROCTask(luigi.Task):
     def print_metrics(y_true, y_pred):
         # print("Accuracy = ",accuracy_score(y_true,y_pred))
         # print("f1_micro = ", f1_score(y_true, y_pred, average="micro"))
-        # print("f1_macro = ", f1_score(y_true, y_pred, average="macro"))
+        print("f1_macro = ", f1_score(y_true, y_pred, average="macro"))
         # print("f1_weighted = ", f1_score(y_true, y_pred, average="weighted"))
         # print("Hamming loss = ",hamming_loss(y,y_pred))
         pass
@@ -117,8 +119,14 @@ class PlotROCTask(luigi.Task):
         return f
 
     def run(self):
-        self.y_true = self.requires()['y_true'].get_outputs()
-        self.y_pred = self.requires()['y_pred'].get_outputs()
+        self.test_indices = self.get_inputs()['train_test_split']['test_indices']
+        self.y_true = self.requires()['y_true'].get_outputs().iloc[self.test_indices]
+        print(self.y_true)
+        self.y_pred = self.requires()['y_pred'].get_outputs()[self.test_indices]
+        print(self.y_pred)
+
+        if self.config['preprocess']['is_data_dataframe']:
+            self.y_true = self.y_true.to_numpy()
 
         # metrics
         self.print_metrics(self.y_true, self.y_pred)
