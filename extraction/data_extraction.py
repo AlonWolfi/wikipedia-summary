@@ -60,12 +60,22 @@ class DataExtractionTask(luigi.Task):
                     save_data(df_cache, get_file_path(self.output_path, 'subcache'))
                     save_data('\n'.join(bad_pages), get_file_path('bad_pages.txt', 'subcache'))
 
-            doc = load_text(p)
+            try:
+                doc = load_text(p)
+            except:
+                bad_pages.append(p)
+                continue
+
             if doc is None:
                 bad_pages.append(p)
                 continue
 
-            infobox = load_info_box(p)
+            try:
+                infobox = load_info_box(p)
+            except:
+                bad_pages.append(p)
+                continue
+
             if infobox is None:
                 bad_pages.append(p)
                 continue
@@ -79,4 +89,4 @@ class DataExtractionTask(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(DataExtractionTask)
+    luigi.run_task(DataExtractionTask())
