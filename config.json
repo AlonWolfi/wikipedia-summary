@@ -1,7 +1,7 @@
 {
   "luigi_local_scheduler": true,
   "debug": {
-    "DEBUG": true,
+    "DEBUG": false,
     "delete_cache": false
   },
   "extraction": {

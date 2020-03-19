@@ -125,7 +125,7 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
     if os.path.exists(file_path):
         os.remove(file_path)
         # to fix writing after deleting
-        time.sleep(1)
+        time.sleep(10)
 
     elif file_path.suffix == '.pickle':
         with open(file_path, 'wb') as file:
