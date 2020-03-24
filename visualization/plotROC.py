@@ -1,24 +1,19 @@
 import numpy as np
-
-from scipy import interp
 from sklearn.metrics import roc_curve, auc, f1_score
 
 import utils.luigi_wrapper as luigi
-from utils.utils import *
-
-from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
-from questions_model.create_predictions import QuestionsMakePredictionsTask
+from preprocess.create_dataset import CreateDataSetTask
+from preprocess.dataset import DataSet
 from questions_model.prior import QuestionsPredictionsAfterPriorTask
-from preprocess.train_test_split import TrainTestSplitTask
+from utils.utils import *
 
 
 class PlotROCTask(luigi.Task):
 
     def requires(self):
         return {
-            'y_true': QuestionsLabelExtractionTask(),
+            'data': CreateDataSetTask(),
             'y_pred': QuestionsPredictionsAfterPriorTask(),
-            'train_test_split': TrainTestSplitTask()
         }
 
     def output(self):
@@ -119,15 +114,14 @@ class PlotROCTask(luigi.Task):
         return f
 
     def run(self):
-        self.test_indices = self.get_inputs()['train_test_split']['test_indices']
-        self.y_true = self.requires()['y_true'].get_outputs().iloc[self.test_indices]
-        print(self.y_true)
-        self.y_pred = self.requires()['y_pred'].get_outputs()[self.test_indices]
-        print(self.y_pred)
+        inputs = self.get_inputs()
+        data: DataSet = inputs['data']
+        y_pred = inputs['y_pred']
+        y = data.y
+        index_test = data.index_test
 
-        if self.config['preprocess']['is_data_dataframe']:
-            self.y_true = self.y_true.to_numpy()
-
+        self.y_true = y[index_test]
+        self.y_pred = y_pred[index_test]
         # metrics
         self.print_metrics(self.y_true, self.y_pred)
 
