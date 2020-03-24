@@ -1,46 +1,32 @@
-from sklearn.model_selection import cross_val_predict
-
 import utils.luigi_wrapper as luigi
-
-from utils.utils import *
-
-from preprocess.data_tokenization import DataTokenizationTask
-from preprocess.feature_selection import FeatureSelectionTask
-from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
+from preprocess.create_dataset import CreateDataSetTask
+from preprocess.dataset import DataSet
 from questions_model.choose_best_model import QuestionsModelSelectionTask
-from preprocess.train_test_split import TrainTestSplitTask
+from utils.utils import *
 
 
 class QuestionsMakePredictionsTask(luigi.Task):
 
     def requires(self):
         return {
-            'X': DataTokenizationTask(),
-            'y': QuestionsLabelExtractionTask(),
-            'best_model': QuestionsModelSelectionTask(),
-            'train_test_split': TrainTestSplitTask()
+            'data': CreateDataSetTask(),
+            'best_model': QuestionsModelSelectionTask()
         }
 
     def output(self):
         return luigi.LocalTarget(get_file_path('y_pred.pickle', 'question_model'))
 
     def run(self):
-        X = self.requires()['X'].get_outputs()
-        y = self.requires()['y'].get_outputs()
-        best_model = self.requires()['best_model'].get_outputs()
-        train_indices = self.requires()['train_test_split'].get_outputs()['train_indices']
+        inputs = self.get_inputs()
+        data: DataSet = inputs['data']
+        best_model = inputs['best_model']
+        X = data.X
+        X_train, y_train = data.train_data
 
-        if self.config['preprocess']['is_data_dataframe']:
-            X = X.to_numpy()
-            y = y.to_numpy()
-
-        x_train = X[train_indices]
-        y_train = y[train_indices]
-
-        model = best_model.fit(x_train, y_train)
+        model = best_model.fit(X_train, y_train)
         y_pred = model.predict_proba(X)
 
-        save_data(y_pred, self.output().path)
+        self.save(y_pred)
 
 
 if __name__ == '__main__':

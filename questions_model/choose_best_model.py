@@ -1,20 +1,16 @@
 import importlib
+
 import optuna
-
-import utils.luigi_wrapper as luigi
-
 from sklearn.base import BaseEstimator
+from sklearn.metrics import f1_score
 from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_auc_score, f1_score
 from sklearn.multiclass import OneVsRestClassifier
 
-from utils.utils import *
-
+import utils.luigi_wrapper as luigi
+from preprocess.create_dataset import CreateDataSetTask
+from preprocess.dataset import DataSet
 from questions_model.questions_models_config import get_models, OptunaModel
-from preprocess.data_tokenization import DataTokenizationTask
-from preprocess.feature_selection import FeatureSelectionTask
-from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
-from preprocess.train_test_split import TrainTestSplitTask
+from utils.utils import *
 
 
 class ParamOptimizer:
@@ -77,33 +73,17 @@ class OptunaParamOptimizer(ParamOptimizer):
 
 class QuestionsModelSelectionTask(luigi.Task):
     def requires(self):
-        return {
-            'X': DataTokenizationTask(),
-            'y': QuestionsLabelExtractionTask(),
-            'train_test_split': TrainTestSplitTask()
-        }
+        return CreateDataSetTask()
 
     def output(self):
         return luigi.LocalTarget(get_file_path('best_estimator.pickle', 'question_model'))
 
     def run(self):
-        train_test_split = self.get_inputs()['train_test_split']
-        X = self.requires()['X'].get_outputs()
-        y = self.requires()['y'].get_outputs()
+        data: DataSet = self.get_inputs()
+        X_train, y_train = data.train_data
 
-        if self.config['preprocess']['is_data_dataframe']:
-            X = X.to_numpy()
-            y = y.to_numpy()
-
-        if self.config['debug']['DEBUG']:
-            y = y[:, :5]
-
-        X_train = X[train_test_split['train_indices']]
-        y_train = y[train_test_split['train_indices']]
-
-        print(f'X.shape is {X.shape}')
-        print(f'y.shape is {y.shape}')
-        param_optimizer = OptunaParamOptimizer(get_models(), X_train, y_train, self.config['questions_model']['one_vs_rest'])
+        param_optimizer = OptunaParamOptimizer(get_models(), X_train, y_train,
+                                               self.config['questions_model']['one_vs_rest'])
 
         best_clf = param_optimizer.get_best_model()
 

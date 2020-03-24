@@ -10,9 +10,10 @@
   },
   "preprocess": {
     "is_data_dataframe": true,
+    "use_feature_selection": false,
     "NOT_FREQ_LABEL_THRESH": 50,
     "NOT_FREQ_TOKEN_THRESH": 0.01,
-    "TEST_SIZE": 0.2
+    "train_test_ratio": 0.2
   },
   "questions_model": {
     "one_vs_rest": true
