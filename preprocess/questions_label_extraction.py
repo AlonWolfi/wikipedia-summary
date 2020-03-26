@@ -1,11 +1,9 @@
+from nltk.stem.porter import PorterStemmer
 from sklearn.preprocessing import MultiLabelBinarizer
 
 import utils.luigi_wrapper as luigi
-from utils.utils import *
-
 from extraction.data_extraction import DataExtractionTask
-
-from nltk.stem.porter import PorterStemmer
+from utils.utils import *
 
 porter = PorterStemmer()
 
@@ -56,13 +54,8 @@ class QuestionsLabelExtractionTask(luigi.Task):
         vectorizer.fit(filtered_questions)
         transformed_array = vectorizer.transform(filtered_questions)
 
-        if self.config['preprocess']['is_data_dataframe']:
-            df_questions = pd.DataFrame(index=full_df.index)
-            for col, value in zip(vectorizer.classes_, transformed_array.T):
-                df_questions[col] = value
-            save_data(df_questions, self.output().path)
-        else:
-            save_data(transformed_array, self.output().path)
+        df_questions = pd.DataFrame(transformed_array, index=full_df.index, columns=vectorizer.classes_)
+        save_data(df_questions, self.output().path)
 
 
 if __name__ == '__main__':

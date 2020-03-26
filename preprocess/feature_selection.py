@@ -1,9 +1,8 @@
 import numpy as np
 
 import utils.luigi_wrapper as luigi
-from utils.utils import *
-
 from preprocess.data_tokenization import DataTokenizationTask
+from utils.utils import *
 
 
 class FeatureSelectionTask(luigi.Task):
@@ -18,10 +17,7 @@ class FeatureSelectionTask(luigi.Task):
 
         feature_indices = np.random.choice(np.arange(X.shape[1]), size=1000)
 
-        if self.config['preprocess']['is_data_dataframe']:
-            X = X.iloc[:, feature_indices]
-        else:
-            X = X[:, feature_indices]
+        X = X[:, feature_indices]
 
         save_data(X, self.output().path)
 

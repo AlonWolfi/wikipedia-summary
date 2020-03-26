@@ -70,13 +70,17 @@ class DataTokenizationTask(luigi.Task):
         vectorizer.fit(tokenized_text)
         transformed_array = vectorizer.transform(tokenized_text)
 
-        if self.config['preprocess']['is_data_dataframe']:
-            tokenized_df = pd.DataFrame(index=full_df.index)
-            for col, value in zip(vectorizer.get_feature_names(), transformed_array.toarray().T):
-                tokenized_df[col] = value
-            save_data(tokenized_df, self.output().path)
-        else:
-            save_data(transformed_array, self.output().path)
+        tokenized_df = pd.DataFrame(transformed_array.toarray(), index=full_df.index,
+                                    columns=vectorizer.get_feature_names())
+        save_data(tokenized_df, self.output().path)
+
+        # if self.config['preprocess']['is_data_dataframe']:
+        #     tokenized_df = pd.DataFrame(index=full_df.index)
+        #     for col, value in zip(vectorizer.get_feature_names(), transformed_array.toarray().T):
+        #         tokenized_df[col] = value
+        #     save_data(tokenized_df, self.output().path)
+        # else:
+        #     save_data(transformed_array, self.output().path)
 
 
 if __name__ == '__main__':

@@ -9,7 +9,6 @@
     "initial_category": "Category:Actors"
   },
   "preprocess": {
-    "is_data_dataframe": true,
     "use_feature_selection": false,
     "NOT_FREQ_LABEL_THRESH": 50,
     "NOT_FREQ_TOKEN_THRESH": 0.01,

@@ -1,18 +1,16 @@
 import numpy as np
 
 import utils.luigi_wrapper as luigi
-from utils.utils import *
-
-from preprocess.questions_label_extraction import QuestionsLabelExtractionTask
+from preprocess.create_dataset import CreateDataSetTask
+from preprocess.dataset import DataSet
 from questions_model.create_predictions import QuestionsMakePredictionsTask
-from preprocess.train_test_split import TrainTestSplitTask
+from utils.utils import *
 
 
 class QuestionsPredictionsAfterPriorTask(luigi.Task):
     def requires(self):
-        return {'y': QuestionsLabelExtractionTask(),
-                'y_pred': QuestionsMakePredictionsTask(),
-                'train_test_split': TrainTestSplitTask()}
+        return {'data': CreateDataSetTask(),
+                'y_pred': QuestionsMakePredictionsTask()}
 
     def output(self):
         return luigi.LocalTarget(get_file_path('y_pred_after_prior.pickle', 'question_model'))
@@ -50,9 +48,9 @@ class QuestionsPredictionsAfterPriorTask(luigi.Task):
 
             all_counter += 1
 
-                # prior_shift = np.log2(p_ij[i, j] / (p_ij[j, j]) + 1) # * sum_prediction
-                # p_i_new += prediction[j] * prior_shift
-                # Z += prior_shift
+            # prior_shift = np.log2(p_ij[i, j] / (p_ij[j, j]) + 1) # * sum_prediction
+            # p_i_new += prediction[j] * prior_shift
+            # Z += prior_shift
             # normalization
             # p_i_new /= Z
             p_i_new = prior_shift * prediction[i]
@@ -71,14 +69,11 @@ class QuestionsPredictionsAfterPriorTask(luigi.Task):
         return priored_prediction
 
     def run(self):
-        y_pred = self.get_inputs()['y_pred']
-        y = self.get_inputs()['y']
-        train_indices = self.get_inputs()['train_test_split']['train_indices']
+        inputs = self.get_inputs()
+        data: DataSet = inputs['data']
+        y_pred = inputs['y_pred']
 
-        if self.config['preprocess']['is_data_dataframe']:
-            y = y.to_numpy()
-
-        p_ij = self.get_prior(y[train_indices])
+        p_ij = self.get_prior(data.y_train)
 
         y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, p) for p in y_pred])
 
