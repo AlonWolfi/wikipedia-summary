@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.sparse.csgraph import minimum_spanning_tree
 
 import utils.luigi_wrapper as luigi
 from prior.create_entropy import CreateEntropyTask
@@ -37,28 +38,28 @@ class BeliefPropagation:
         return N
 
     def propagate_message(self, prediction, i, parent, parent_val):
-        message = [0, 0]
+        message = [1., 1.]
         neighbors = self.get_remaining_neighbors(i, prediction, parent)
 
         if (i, parent, parent_val) in self.messages_dict:
             message = self.messages_dict[(i, parent, parent_val)]
         else:
-            if len(neighbors) > 0:
-                for val in range(len(message)):
-                    message[val] = self.theta(i, parent, val, parent_val)
-                    if val == 0:
-                        message[val] *= (1 - prediction[i])
-                    else:
-                        message[val] *= prediction[i]
-                    if len(neighbors) > 0:
-                        message[val] *= np.prod([self.propagate_message(prediction, n, i, val) for n in neighbors])
+            for val in range(len(message)):
+                message[val] = self.theta(i, parent, val, parent_val)
+                if val == 0:
+                    message[val] *= (1 - prediction[i])
+                else:
+                    message[val] *= prediction[i]
+                if len(neighbors) > 0:
+                    message[val] *= np.prod([self.propagate_message(prediction, n, i, val) for n in neighbors])
             # cache message
             self.messages_dict[(i, parent, parent_val)] = message
+        # print(f'message at {(i, parent, parent_val)} was {message}')
         return np.sum(message)
 
     def message(self, prediction, i):
         neighbors = self.get_remaining_neighbors(i, prediction)
-        message = []
+        message = [1., 1.]
         for val in range(len(message)):
             if val == 0:
                 message[val] *= (1 - prediction[i])
@@ -89,6 +90,8 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
             message = belief.message(prediction, i)
             p_i0, p_i1 = message
             p_i_new = p_i1 / (p_i1 + p_i0)
+            # print(f'at i={i} - p_i0, p_i1: {(p_i0, p_i1)}')
+            # print(f'at i={i} - p_i_new: {p_i_new}')
             priored_prediction.append(p_i_new)
         return priored_prediction
 
@@ -97,8 +100,9 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
         y_pred = inputs['y_pred']
         p_ij = inputs['p_ij']
         E_ij = inputs['E_ij']
+        T_pos = minimum_spanning_tree(E_ij).todense()
 
-        y_pred_after_prior = np.array([self._run_prior_on_prediction(p_ij, E_ij, p) for p in y_pred])
+        y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_pos, p) for p in y_pred])
 
         save_data(y_pred_after_prior, self.output().path)
 

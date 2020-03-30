@@ -28,13 +28,13 @@ class QuestionsPredictionsAfterPriorTask(luigi.Task):
             for j in range(len(prediction)):
                 # prior_shift = E_ij[i, j]  # * sum_prediction
 
-                mone = prediction[i] * (prediction[j] * p_ij[i, j] + (1 - prediction[j]) * (p_ij[i, i] - p_ij[i, j]))
+                mone = (prediction[j] * p_ij[i, j] + (1 - prediction[j]) * (p_ij[i, i] - p_ij[i, j]))
                 mechane = mone + (1 - prediction[i]) * (
                         prediction[j] * (p_ij[j, j] - p_ij[i, j]) + (1 - prediction[j]) * (
                         1 - p_ij[i, i] - p_ij[i, j] + p_ij[i, j]))
 
-                p_i_new += mone / mechane
-                Z += p_ij[i, i]
+                p_i_new += prediction[i] * (mone / mechane)
+                Z += (mone / mechane)
 
             p_i_new /= Z
 

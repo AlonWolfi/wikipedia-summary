@@ -1,10 +1,11 @@
 import numpy as np
 from sklearn.metrics import roc_curve, auc, f1_score
+from numpy import interp
 
 import utils.luigi_wrapper as luigi
 from preprocess.create_dataset import CreateDataSetTask
 from preprocess.dataset import DataSet
-from questions_model.prior import QuestionsPredictionsAfterPriorTask
+from prior.belief_prior_predictions import QuestionsBeliefPredictionsAfterPriorTask
 from utils.utils import *
 
 
@@ -13,7 +14,7 @@ class PlotROCTask(luigi.Task):
     def requires(self):
         return {
             'data': CreateDataSetTask(),
-            'y_pred': QuestionsPredictionsAfterPriorTask(),
+            'y_pred': QuestionsBeliefPredictionsAfterPriorTask(),
         }
 
     def output(self):
@@ -23,7 +24,7 @@ class PlotROCTask(luigi.Task):
     def print_metrics(y_true, y_pred):
         # print("Accuracy = ",accuracy_score(y_true,y_pred))
         # print("f1_micro = ", f1_score(y_true, y_pred, average="micro"))
-        print("f1_macro = ", f1_score(y_true, y_pred, average="macro"))
+        print("f1_macro = ", f1_score(y_true, np.round(y_pred), average="macro"))
         # print("f1_weighted = ", f1_score(y_true, y_pred, average="weighted"))
         # print("Hamming loss = ",hamming_loss(y,y_pred))
         pass
@@ -117,10 +118,9 @@ class PlotROCTask(luigi.Task):
         inputs = self.get_inputs()
         data: DataSet = inputs['data']
         y_pred = inputs['y_pred']
-        y = data.y
-        index_test = data.index_test
+        index_test = data._arr_indices_test
 
-        self.y_true = y[index_test]
+        self.y_true = data.y_test
         self.y_pred = y_pred[index_test]
         # metrics
         self.print_metrics(self.y_true, self.y_pred)

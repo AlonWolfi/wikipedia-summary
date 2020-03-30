@@ -15,7 +15,11 @@
     "train_test_ratio": 0.2
   },
   "questions_model": {
+    "find_best_model": false,
     "one_vs_rest": true
+  },
+  "prior": {
+    "E_neginf_replace": -5
   },
   "visualization": {
     "plot_all_ROCs": false

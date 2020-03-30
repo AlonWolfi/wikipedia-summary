@@ -1,27 +1,33 @@
+import importlib
+
 import lightgbm as lgb
-import xgboost as xgb
-import sklearn
 import optuna
-
+import sklearn
+import xgboost as xgb
 from sklearn.base import BaseEstimator
-from sklearn.multiclass import OneVsRestClassifier
 
 
-class OptunaModel:
+class Model:
     @property
     def model(self) -> BaseEstimator:
         raise NotImplementedError
 
-    def params(self, trial: optuna.Trial) -> dict:
+    def optuna_params(self, trial: optuna.Trial) -> dict:
         raise NotImplementedError
 
+    @staticmethod
+    def load_model_from_path(model_path: str) -> BaseEstimator:
+        lib_path, model_path = model_path.rsplit('.', 1)
+        lib = importlib.import_module(lib_path)
+        return getattr(lib, model_path)
 
-class LogisticRegressionModel(OptunaModel):
+
+class LogisticRegressionModel(Model):
     @property
     def model(self):
         return sklearn.linear_model.LogisticRegression()
 
-    def params(self, trial):
+    def optuna_params(self, trial):
         param = {
             'penalty': trial.suggest_categorical('penalty', ['none', 'l2']),
             'C': trial.suggest_loguniform('C', 0.001, 10),
@@ -31,24 +37,24 @@ class LogisticRegressionModel(OptunaModel):
         return param
 
 
-class SVCModel(OptunaModel):
+class SVCModel(Model):
     @property
     def model(self):
         return sklearn.svm.SVC(probability=True)
 
-    def params(self, trial):
+    def optuna_params(self, trial):
         param = {
             'C': trial.suggest_loguniform('C', 1e-10, 1e10)
         }
         return param
 
 
-class LGBModel(OptunaModel):
+class LGBModel(Model):
     @property
     def model(self):
         return lgb.sklearn.LGBMClassifier()
 
-    def params(self, trial):
+    def optuna_params(self, trial):
         param = {
             'objective': 'binary',
             'metric': 'binary_logloss',
@@ -65,12 +71,12 @@ class LGBModel(OptunaModel):
         return param
 
 
-class XGBModel(OptunaModel):
+class XGBModel(Model):
     @property
     def model(self):
         return xgb.sklearn.XGBClassifier()
 
-    def params(self, trial):
+    def optuna_params(self, trial):
         param = {
             'silent': 1,
             'objective': 'binary:logistic',
