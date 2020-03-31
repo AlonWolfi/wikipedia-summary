@@ -16,6 +16,7 @@
   },
   "questions_model": {
     "find_best_model": false,
+    "model_to_use": "svm",
     "one_vs_rest": true
   },
   "prior": {

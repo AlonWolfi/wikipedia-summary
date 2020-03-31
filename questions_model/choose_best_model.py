@@ -69,21 +69,20 @@ class QuestionsModelSelectionTask(luigi.Task):
         return CreateDataSetTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('best_estimator.pickle', 'question_model'))
+        return luigi.LocalTarget(get_file_path(f"{self.config['questions_model']['model_to_use']}_best_estimator.pickle", 'question_model'))
 
     def run(self):
         data: DataSet = self.get_inputs()
         X_train, y_train = data.train_data
         if self.config['questions_model']['find_best_model']:
-            metric = lambda y_true, y_pred: f1_score(y_true, y_pred, average='macro')
+            metric = self.config['metric']
             param_optimizer = OptunaParamOptimizer(get_models(), X_train, y_train,
                                                    self.config['questions_model']['one_vs_rest'], metric)
 
             best_model = param_optimizer.get_best_model()
         else:
-            model_models = list(get_models().values())
             # get first model
-            best_model = model_models[0].model
+            best_model = get_models()[self.config['questions_model']['model_to_use']].model
             if self.config['questions_model']['one_vs_rest']:
                 best_model = OneVsRestClassifier(best_model, n_jobs=-1)
 

@@ -1,17 +1,20 @@
-import luigi
-from luigi import LocalTarget
-from luigi import Parameter, BoolParameter
-from luigi import build
 import shutil
 
+import luigi
+from luigi import LocalTarget
+
+from sklearn.metrics import f1_score
+
+from metrics import HardMetric
 from utils.utils import *
 
 
 class Task(luigi.Task):
 
-    def __init__(self):
-        super(Task, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(Task, self).__init__(*args, **kwargs)
         self.config = get_config()
+        self.config['metric'] = HardMetric(metric=lambda y_true, y_pred: f1_score(y_true, y_pred, average='macro'))
 
     @classmethod
     def __get_task_done_path(cls):

@@ -2,6 +2,7 @@ import numpy as np
 from scipy.sparse.csgraph import minimum_spanning_tree
 
 import utils.luigi_wrapper as luigi
+from preprocess.create_dataset import CreateDataSetTask
 from prior.create_entropy import CreateEntropyTask
 from prior.create_prior import CreatePriorTask
 from questions_model.create_predictions import QuestionsMakePredictionsTask
@@ -16,8 +17,8 @@ class BeliefPropagation:
         # self.is_negetive_tree = is_negetive_tree
         self.messages_dict = {}
 
-    def theta(self, i, j, i_val, j_val):
-        p_ij = self.p_ij
+    @staticmethod
+    def theta(p_ij, i, j, i_val, j_val):
         if i_val == 1 and j_val == 1:
             return p_ij[i, j] / (p_ij[i, i] * p_ij[j, j])
         elif i_val == 1 and j_val == 0:
@@ -45,7 +46,7 @@ class BeliefPropagation:
             message = self.messages_dict[(i, parent, parent_val)]
         else:
             for val in range(len(message)):
-                message[val] = self.theta(i, parent, val, parent_val)
+                message[val] = self.theta(self.p_ij, i, parent, val, parent_val)
                 if val == 0:
                     message[val] *= (1 - prediction[i])
                 else:
@@ -71,15 +72,32 @@ class BeliefPropagation:
 
 
 class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
+    is_conn_pos = luigi.luigi.BoolParameter()
+    is_after_belief = luigi.luigi.BoolParameter()
+
     def requires(self):
-        return {
-            'y_pred': QuestionsMakePredictionsTask(),
+        req = {
+            'data': CreateDataSetTask(),
             'p_ij': CreatePriorTask(),
             'E_ij': CreateEntropyTask()
         }
+        if self.is_after_belief:
+            print(f'self.is_after_belief: {self.is_after_belief}')
+            req['y_pred'] = QuestionsBeliefPredictionsAfterPriorTask(is_conn_pos=(not self.is_conn_pos),
+                                                                     is_after_belief=False)
+        else:
+            req['y_pred'] = QuestionsMakePredictionsTask()
+
+        return req
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('y_pred_after_prior.pickle', 'question_model'))
+        output_path = self.input()['y_pred'].path.split('.')[0]
+        if self.is_conn_pos:
+            output_path += '_prior_pos'
+        else:
+            output_path += '_prior_neg'
+        output_path += '.pickle'
+        return luigi.LocalTarget(get_file_path(output_path, 'question_model'))
 
     @staticmethod
     def run_prior_on_prediction(p_ij, T, prediction, is_positive_tree=True):
@@ -95,14 +113,32 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
             priored_prediction.append(p_i_new)
         return priored_prediction
 
+    @staticmethod
+    def get_neg_conn_strength(p_ij):
+        conn_strength = np.zeros(p_ij.shape)
+        for i in range(p_ij.shape[0]):
+            for j in range(p_ij.shape[0]):
+                conn_strength[i, j] = (BeliefPropagation.theta(p_ij, i, j, 1, 0) + BeliefPropagation.theta(p_ij, i, j,
+                                                                                                           0, 1)) / 2
+        return conn_strength
+
     def run(self):
         inputs = self.get_inputs()
-        y_pred = inputs['y_pred']
+        data = inputs['data']
+        y_pred = read_data(self.input()['y_pred'].path)
         p_ij = inputs['p_ij']
-        E_ij = inputs['E_ij']
-        T_pos = minimum_spanning_tree(E_ij).todense()
+        conn_strength_ij = inputs['E_ij']
+        neg_conn_strength_ij = self.get_neg_conn_strength(p_ij)
 
-        y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_pos, p) for p in y_pred])
+        if self.is_after_belief:
+            y_pred = self.config['metric'].get_y(y_pred, data.y_test, normalize=True)
+
+        T_pos = minimum_spanning_tree(conn_strength_ij).todense()
+        T_neg = minimum_spanning_tree(neg_conn_strength_ij).todense()
+        if self.is_conn_pos:
+            y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_pos, p) for p in y_pred])
+        else:
+            y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_neg, p) for p in y_pred])
 
         save_data(y_pred_after_prior, self.output().path)
 

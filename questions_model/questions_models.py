@@ -101,7 +101,7 @@ def get_models():
     return {
         'logistic': LogisticRegressionModel(),
         # TODO - SVC is not Working !!!
-        # 'svc': SVCModel(),
-        # 'lgb': LGBModel(),
-        # 'xgb': XGBModel()
+        'svm': SVCModel(),
+        'lgb': LGBModel(),
+        'xgb': XGBModel()
     }

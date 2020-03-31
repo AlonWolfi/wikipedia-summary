@@ -112,6 +112,13 @@ def loop_through_iterables_list(iterables_list, func_for_ins):
     # else:
     #     return func_for_ins(iterable)
 
+def is_picklable(obj):
+  try:
+    pickle.dumps(obj)
+
+  except pickle.PicklingError:
+    return False
+  return True
 
 def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
     '''
