@@ -24,8 +24,8 @@ class PipelineEnd(luigi.Task):
         }
 
     def output(self):
-        output_path = self.config['questions_model']['model_to_use'] + 'experiment' + '.pickle'
-        return luigi.LocalTarget(get_file_path(output_path, 'question_model'))
+        output_path = self.config['questions_model']['model_to_use'] + '_experiment' + '.pickle'
+        return luigi.LocalTarget(get_file_path(output_path, self.config['exp_dir']))
 
     def run(self):
         params = {k: v for k, v in self.config.items() if k != 'metric'}

@@ -16,7 +16,7 @@ class QuestionsMakePredictionsTask(luigi.Task):
         }
 
     def output(self):
-        return luigi.LocalTarget(get_file_path(f"{self.config['questions_model']['model_to_use']}_y_pred.pickle", 'question_model'))
+        return luigi.LocalTarget(get_file_path(f"y_pred.pickle", self.config['exp_dir']))
 
     def run(self):
         inputs = self.get_inputs()

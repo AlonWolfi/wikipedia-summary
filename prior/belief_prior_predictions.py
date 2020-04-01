@@ -97,7 +97,7 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
         else:
             output_path += '_prior_neg'
         output_path += '.pickle'
-        return luigi.LocalTarget(get_file_path(output_path, 'question_model'))
+        return luigi.LocalTarget(get_file_path(output_path, self.config['exp_dir']))
 
     @staticmethod
     def run_prior_on_prediction(p_ij, T, prediction, is_positive_tree=True):

@@ -69,7 +69,7 @@ class QuestionsModelSelectionTask(luigi.Task):
         return CreateDataSetTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path(f"{self.config['questions_model']['model_to_use']}_best_estimator.pickle", 'question_model'))
+        return luigi.LocalTarget(get_file_path(f"best_estimator.pickle", self.config['exp_dir']))
 
     def run(self):
         data: DataSet = self.get_inputs()

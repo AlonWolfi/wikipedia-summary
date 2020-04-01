@@ -1,10 +1,10 @@
-import os
 import json
+import os
 import pickle
 import time
-import pandas as pd
+import warnings
 from pathlib import Path
-from typing import Union, Iterable
+from typing import Union
 
 from matplotlib.pyplot import Figure
 
@@ -49,12 +49,17 @@ def get_from_config(element: str, category: str = None):
         return get_config()[element]
 
 
-def get_file_path(file_name: str, dir_name: str = None):
-    CACHE_FOLDER = 'cache'
-    if dir_name:
-        return get_project_dir() / CACHE_FOLDER / dir_name / file_name
+def get_file_path(file_name: str, dir_names: Union[str, list] = None):
+    if type(dir_names) == str:
+        dir_names = [dir_names]
+    CACHE_FOLDER = get_project_dir() / 'cache'
+    if dir_names:
+        current_dir = CACHE_FOLDER
+        for dir in dir_names:
+            current_dir /= str(dir)
+        return current_dir / file_name
     else:
-        return get_project_dir() / CACHE_FOLDER / file_name
+        return CACHE_FOLDER / file_name
 
 
 def validate_path(file_path: Union[str, Path]):
@@ -112,13 +117,15 @@ def loop_through_iterables_list(iterables_list, func_for_ins):
     # else:
     #     return func_for_ins(iterable)
 
-def is_picklable(obj):
-  try:
-    pickle.dumps(obj)
 
-  except pickle.PicklingError:
-    return False
-  return True
+def is_picklable(obj):
+    try:
+        pickle.dumps(obj)
+
+    except pickle.PicklingError:
+        return False
+    return True
+
 
 def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
     '''
@@ -148,7 +155,6 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
             file.write(data)
 
 
-
 def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
     '''
     Saves text to file
@@ -161,7 +167,7 @@ def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
     data = None
 
     if not os.path.exists(file_path):
-        print(f'Warning:   File not found: {file_path}')
+        warnings.warn(f'Warning:   File not found: {file_path}', Warning)
         return None
 
     if file_path.suffix == '.pickle':

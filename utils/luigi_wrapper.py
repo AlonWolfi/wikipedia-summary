@@ -15,6 +15,7 @@ class Task(luigi.Task):
         super(Task, self).__init__(*args, **kwargs)
         self.config = get_config()
         self.config['metric'] = HardMetric(metric=lambda y_true, y_pred: f1_score(y_true, y_pred, average='macro'))
+        self.config['exp_dir'] = ['questions_model', self.config['questions_model']['model_to_use'], self.config['preprocess']['fold']]
 
     @classmethod
     def __get_task_done_path(cls):

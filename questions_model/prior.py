@@ -13,7 +13,7 @@ class QuestionsPredictionsAfterPriorTask(luigi.Task):
                 'y_pred': QuestionsMakePredictionsTask()}
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('y_pred_after_prior.pickle', 'question_model'))
+        return luigi.LocalTarget(get_file_path('y_pred_after_prior.pickle', self.config['exp_dir']))
 
     @staticmethod
     def get_prior(y):
