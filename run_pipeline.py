@@ -8,23 +8,17 @@ from questions_model.create_predictions import QuestionsMakePredictionsTask
 from utils.utils import *
 
 
-class PipelineEnd(luigi.Task):
+class RunExperiment(luigi.Task):
     def requires(self):
         return {
             'data': CreateDataSetTask(),
             'y_pred': QuestionsMakePredictionsTask(),
-            'y_pred_prior_pos': QuestionsBeliefPredictionsAfterPriorTask(is_conn_pos=True,
-                                                                         is_after_belief=False),
-            'y_pred_prior_neg': QuestionsBeliefPredictionsAfterPriorTask(is_conn_pos=False,
-                                                                         is_after_belief=False),
-            'y_pred_prior_pos_prior_neg': QuestionsBeliefPredictionsAfterPriorTask(is_conn_pos=False,
-                                                                                   is_after_belief=True),
-            'y_pred_prior_neg_prior_pos': QuestionsBeliefPredictionsAfterPriorTask(is_conn_pos=True,
-                                                                                   is_after_belief=True),
+            'y_pred_prior': QuestionsBeliefPredictionsAfterPriorTask(is_after_belief=False),
+            'y_pred_prior_prior': QuestionsBeliefPredictionsAfterPriorTask(is_after_belief=True),
         }
 
     def output(self):
-        output_path = self.config['questions_model']['model_to_use'] + '_experiment' + '.pickle'
+        output_path = 'experiment' + '.pickle'
         return luigi.LocalTarget(get_file_path(output_path, self.config['exp_dir']))
 
     def run(self):
@@ -54,4 +48,4 @@ class PipelineEnd(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(PipelineEnd(), local_scheduler=get_from_config('luigi_local_scheduler'), delete_all=False)
+    luigi.run_task(RunExperiment(), local_scheduler=get_from_config('luigi_local_scheduler'), delete_all=False)

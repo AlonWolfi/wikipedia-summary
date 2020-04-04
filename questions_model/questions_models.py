@@ -8,6 +8,9 @@ from sklearn.base import BaseEstimator
 
 
 class Model:
+    def __init__(self, extra_params={}):
+        self.extra_params = extra_params
+
     @property
     def model(self) -> BaseEstimator:
         raise NotImplementedError
@@ -25,7 +28,9 @@ class Model:
 class LogisticRegressionModel(Model):
     @property
     def model(self):
-        return sklearn.linear_model.LogisticRegression()
+        return sklearn.linear_model.LogisticRegression(
+            **self.extra_params
+        )
 
     def optuna_params(self, trial):
         param = {
@@ -40,7 +45,8 @@ class LogisticRegressionModel(Model):
 class SVCModel(Model):
     @property
     def model(self):
-        return sklearn.svm.SVC(probability=True)
+        return sklearn.svm.SVC(probability=True,
+                               **self.extra_params)
 
     def optuna_params(self, trial):
         param = {
@@ -52,7 +58,7 @@ class SVCModel(Model):
 class LGBModel(Model):
     @property
     def model(self):
-        return lgb.sklearn.LGBMClassifier()
+        return lgb.sklearn.LGBMClassifier(**self.extra_params)
 
     def optuna_params(self, trial):
         param = {
@@ -74,7 +80,7 @@ class LGBModel(Model):
 class XGBModel(Model):
     @property
     def model(self):
-        return xgb.sklearn.XGBClassifier()
+        return xgb.sklearn.XGBClassifier(**self.extra_params)
 
     def optuna_params(self, trial):
         param = {
@@ -98,10 +104,13 @@ class XGBModel(Model):
 
 
 def get_models():
-    return {
+    models = {
         'logistic': LogisticRegressionModel(),
         # TODO - SVC is not Working !!!
         'svm': SVCModel(),
         'lgb': LGBModel(),
         'xgb': XGBModel()
     }
+    models.update({name + '_normed': model.__class__(
+        {'class_weight': 'balanced'}) for name, model in models.items()})
+    return models

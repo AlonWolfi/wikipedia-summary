@@ -28,6 +28,17 @@ class BeliefPropagation:
         elif i_val == 0 and j_val == 0:
             return (1 - p_ij[j, j] - p_ij[i, i] + p_ij[i, j]) / ((1 - p_ij[j, j]) * (1 - p_ij[i, i]))
 
+    @staticmethod
+    def theta_mone(p_ij, i, j, i_val, j_val):
+        if i_val == 1 and j_val == 1:
+            return p_ij[i, j]
+        elif i_val == 1 and j_val == 0:
+            return (p_ij[i, i] - p_ij[i, j])
+        elif i_val == 0 and j_val == 1:
+            return (p_ij[j, j] - p_ij[i, j])
+        elif i_val == 0 and j_val == 0:
+            return (1 - p_ij[j, j] - p_ij[i, i] + p_ij[i, j])
+
     def have_common_edge(self, i, j):
         return self.T[i, j] != 0 or self.T[j, i] != 0
 
@@ -46,7 +57,7 @@ class BeliefPropagation:
             message = self.messages_dict[(i, parent, parent_val)]
         else:
             for val in range(len(message)):
-                message[val] = self.theta(self.p_ij, i, parent, val, parent_val)
+                message[val] = self.    theta(self.p_ij, i, parent, val, parent_val)
                 if val == 0:
                     message[val] *= (1 - prediction[i])
                 else:
@@ -72,7 +83,6 @@ class BeliefPropagation:
 
 
 class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
-    is_conn_pos = luigi.luigi.BoolParameter()
     is_after_belief = luigi.luigi.BoolParameter()
 
     def requires(self):
@@ -83,8 +93,7 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
         }
         if self.is_after_belief:
             print(f'self.is_after_belief: {self.is_after_belief}')
-            req['y_pred'] = QuestionsBeliefPredictionsAfterPriorTask(is_conn_pos=(not self.is_conn_pos),
-                                                                     is_after_belief=False)
+            req['y_pred'] = QuestionsBeliefPredictionsAfterPriorTask(is_after_belief=False)
         else:
             req['y_pred'] = QuestionsMakePredictionsTask()
 
@@ -92,10 +101,7 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
 
     def output(self):
         output_path = self.input()['y_pred'].path.split('.')[0]
-        if self.is_conn_pos:
-            output_path += '_prior_pos'
-        else:
-            output_path += '_prior_neg'
+        output_path += '_prior'
         output_path += '.pickle'
         return luigi.LocalTarget(get_file_path(output_path, self.config['exp_dir']))
 
@@ -114,31 +120,34 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
         return priored_prediction
 
     @staticmethod
-    def get_neg_conn_strength(p_ij):
+    def get_conn_strength(p_ij):
         conn_strength = np.zeros(p_ij.shape)
         for i in range(p_ij.shape[0]):
             for j in range(p_ij.shape[0]):
-                conn_strength[i, j] = (BeliefPropagation.theta(p_ij, i, j, 1, 0) + BeliefPropagation.theta(p_ij, i, j,
-                                                                                                           0, 1)) / 2
-        return conn_strength
+                conn_strength[i, j] = 0
+                for i_val in range(2):
+                    for j_val in range(2):
+                        conn_addition = BeliefPropagation.theta_mone(p_ij, i, j, i_val, j_val) * np.log(
+                            BeliefPropagation.theta(p_ij, i, j, i_val, j_val))
+                        if np.isnan(conn_addition):
+                            conn_addition = 0
+                        elif np.isinf(-conn_addition) or np.isinf(conn_addition):
+                            conn_addition = -10
+                        conn_strength[i, j] += conn_addition
+        return (-1.) * conn_strength
 
     def run(self):
         inputs = self.get_inputs()
         data = inputs['data']
         y_pred = read_data(self.input()['y_pred'].path)
         p_ij = inputs['p_ij']
-        conn_strength_ij = inputs['E_ij']
-        neg_conn_strength_ij = self.get_neg_conn_strength(p_ij)
+        conn_strength_ij = self.get_conn_strength(p_ij)
 
-        if self.is_after_belief:
-            y_pred = self.config['metric'].get_y(y_pred, data.y_test, normalize=True)
+        # if self.is_after_belief:
+        #     y_pred = self.config['metric'].get_y(y_pred, data.y_test, normalize=True)
 
         T_pos = minimum_spanning_tree(conn_strength_ij).todense()
-        T_neg = minimum_spanning_tree(neg_conn_strength_ij).todense()
-        if self.is_conn_pos:
-            y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_pos, p) for p in y_pred])
-        else:
-            y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_neg, p) for p in y_pred])
+        y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_pos, p) for p in y_pred])
 
         save_data(y_pred_after_prior, self.output().path)
 

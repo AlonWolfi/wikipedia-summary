@@ -53,7 +53,7 @@ def get_file_path(file_name: str, dir_names: Union[str, list] = None):
     if type(dir_names) == str:
         dir_names = [dir_names]
     CACHE_FOLDER = get_project_dir() / 'cache'
-    if dir_names:
+    if dir_names is not None:
         current_dir = CACHE_FOLDER
         for dir in dir_names:
             current_dir /= str(dir)

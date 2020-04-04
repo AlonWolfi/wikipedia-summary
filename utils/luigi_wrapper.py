@@ -1,8 +1,8 @@
 import shutil
 
 import luigi
+import winsound
 from luigi import LocalTarget
-
 from sklearn.metrics import f1_score
 
 from metrics import HardMetric
@@ -15,7 +15,8 @@ class Task(luigi.Task):
         super(Task, self).__init__(*args, **kwargs)
         self.config = get_config()
         self.config['metric'] = HardMetric(metric=lambda y_true, y_pred: f1_score(y_true, y_pred, average='macro'))
-        self.config['exp_dir'] = ['questions_model', self.config['questions_model']['model_to_use'], self.config['preprocess']['fold']]
+        self.config['exp_dir'] = ['questions_model', self.config['questions_model']['model_to_use'],
+                                  self.config['preprocess']['fold']]
 
     @classmethod
     def __get_task_done_path(cls):
@@ -68,3 +69,6 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
     )
     print(f"#### output ####")
     print(task.get_outputs())
+    frequency = 2400  # Set Frequency To 2500 Hertz
+    duration = 5 * 1000  # Set Duration To 1000 ms == 1 second
+    winsound.Beep(frequency, duration)

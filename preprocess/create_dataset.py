@@ -39,7 +39,7 @@ class CreateDataSetTask(luigi.Task):
         return _CreateKFoldDataSet()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('dataset.pickle', 'data'))
+        return luigi.LocalTarget(get_file_path('dataset_' + str(self.config['preprocess']['fold']) + '.pickle', 'data'))
 
     def run(self):
         dataset = self.get_inputs()
