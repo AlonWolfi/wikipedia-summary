@@ -1,30 +1,29 @@
 import numpy as np
+import pandas as pd
 
 from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split
 
-from utils.utils import *
-
 
 class DataSet:
-    def __init__(self, X, y, train_test_ratio=0.2):
+    def __init__(self, X, y):
         self.X = csr_matrix(X.values)
         self.y = y.values
-        self.train_test_ratio = train_test_ratio
         self.feature_names = X.columns.tolist()
 
         self._X_cols = X.columns
         self._y_cols = y.columns
         self._index = X.index
         self._arr_indices = np.arange(X.shape[0])
-        self.__split_data()
 
-    def __split_data(self):
-        args_splitted = train_test_split(self.X, self.y, self._index, self._arr_indices, test_size=self.train_test_ratio)
+        args_splitted = self._split_data()
         self.X_train, self.X_test = args_splitted[0:2]
         self.y_train, self.y_test = args_splitted[2:4]
         self._index_train, self._index_test = args_splitted[4:6]
         self._arr_indices_train, self._arr_indices_test = args_splitted[6:8]
+
+    def _split_data(self):
+        raise NotImplementedError
 
     @property
     def data(self):
@@ -73,3 +72,35 @@ class DataSet:
         if as_dataframe:
             y_test = pd.DataFrame(y_test, index=self._index_test, columns=self._y_cols)
         return y_test
+
+
+class HoldOutDataSet(DataSet):
+
+    def __init__(self, X, y, train_test_ratio=0.2):
+        self.train_test_ratio = train_test_ratio
+
+        super(HoldOutDataSet, self).__init__(X=X, y=y)
+
+    def _split_data(self):
+        return train_test_split(self.X, self.y, self._index, self._arr_indices, test_size=self.train_test_ratio)
+
+
+class FoldDataSet(DataSet):
+
+    def __init__(self, X, y, train_indices, test_indices):
+        self.__train_indices = train_indices
+        self.__test_indices = test_indices
+
+        super(FoldDataSet, self).__init__(X=X, y=y)
+
+    def _split_data(self):
+        return [
+            self.X[self.__train_indices],
+            self.X[self.__test_indices],
+            self.y[self.__train_indices],
+            self.y[self.__test_indices],
+            self._index[self.__train_indices],
+            self._index[self.__test_indices],
+            self.__train_indices,
+            self.__test_indices,
+        ]

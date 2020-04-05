@@ -1,3 +1,5 @@
+import numpy as np
+
 import utils.luigi_wrapper as luigi
 from preprocess.create_dataset import CreateDataSetTask
 from preprocess.dataset import DataSet
@@ -14,17 +16,17 @@ class QuestionsMakePredictionsTask(luigi.Task):
         }
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('y_pred.pickle', 'question_model'))
+        return luigi.LocalTarget(get_file_path(f"y_pred.pickle", self.config['exp_dir']))
 
     def run(self):
         inputs = self.get_inputs()
         data: DataSet = inputs['data']
         best_model = inputs['best_model']
-        X = data.X
+        X_test = data.X_test
         X_train, y_train = data.train_data
 
         model = best_model.fit(X_train, y_train)
-        y_pred = model.predict_proba(X)
+        y_pred = model.predict_proba(X_test)
 
         self.save(y_pred)
 

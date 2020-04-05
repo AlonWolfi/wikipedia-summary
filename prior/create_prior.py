@@ -5,7 +5,6 @@ from preprocess.create_dataset import CreateDataSetTask
 from preprocess.dataset import DataSet
 from utils.utils import *
 
-
 class CreatePriorTask(luigi.Task):
 
     def requires(self):

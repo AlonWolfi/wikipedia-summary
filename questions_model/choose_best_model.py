@@ -1,5 +1,3 @@
-import importlib
-
 import optuna
 from sklearn.base import BaseEstimator
 from sklearn.metrics import f1_score
@@ -9,7 +7,7 @@ from sklearn.multiclass import OneVsRestClassifier
 import utils.luigi_wrapper as luigi
 from preprocess.create_dataset import CreateDataSetTask
 from preprocess.dataset import DataSet
-from questions_model.questions_models_config import get_models, OptunaModel
+from questions_model.questions_models import get_models, Model
 from utils.utils import *
 
 
@@ -17,31 +15,26 @@ class ParamOptimizer:
     def __init__(self, models_dict: dict):
         self.models_dict = models_dict
 
-    @staticmethod
-    def load_model_from_path(model_path: str) -> BaseEstimator:
-        lib_path, model_path = model_path.rsplit('.', 1)
-        lib = importlib.import_module(lib_path)
-        return getattr(lib, model_path)
-
     def get_best_model(self):
         pass
 
 
 class OptunaParamOptimizer(ParamOptimizer):
 
-    def __init__(self, model_dict, X, y, one_vs_rest):
+    def __init__(self, model_dict, X, y, one_vs_rest, metric):
         super(OptunaParamOptimizer, self).__init__(model_dict)
         self.X = X
         self.y = y
         self.one_vs_rest = one_vs_rest
+        self.metric = metric
 
     def optuna_objective(self, trial: optuna.Trial):
         model_name = trial.suggest_categorical('model', list(self.models_dict.keys()))
 
-        model_model: OptunaModel = self.models_dict[model_name]
+        model_model: Model = self.models_dict[model_name]
 
         model: BaseEstimator = model_model.model
-        params: dict = model_model.params(trial)
+        params: dict = model_model.optuna_params(trial)
         model.set_params(**params)
 
         if self.one_vs_rest:
@@ -49,7 +42,7 @@ class OptunaParamOptimizer(ParamOptimizer):
 
         y_pred = cross_val_predict(model, self.X, self.y, cv=3)
 
-        score = f1_score(self.y, y_pred, average='macro')
+        score = self.metric(self.y, y_pred)
 
         return score
 
@@ -76,15 +69,21 @@ class QuestionsModelSelectionTask(luigi.Task):
         return CreateDataSetTask()
 
     def output(self):
-        return luigi.LocalTarget(get_file_path('best_estimator.pickle', 'question_model'))
+        return luigi.LocalTarget(get_file_path(f"best_estimator.pickle", self.config['exp_dir']))
 
     def run(self):
         data: DataSet = self.get_inputs()
         X_train, y_train = data.train_data
+        if self.config['questions_model']['find_best_model']:
+            metric = self.config['metric']
+            param_optimizer = OptunaParamOptimizer(get_models(), X_train, y_train,
+                                                   self.config['questions_model']['one_vs_rest'], metric)
 
-        param_optimizer = OptunaParamOptimizer(get_models(), X_train, y_train,
-                                               self.config['questions_model']['one_vs_rest'])
+            best_model = param_optimizer.get_best_model()
+        else:
+            # get first model
+            best_model = get_models()[self.config['questions_model']['model_to_use']].model
+            if self.config['questions_model']['one_vs_rest']:
+                best_model = OneVsRestClassifier(best_model, n_jobs=-1)
 
-        best_clf = param_optimizer.get_best_model()
-
-        self.save(best_clf)
+        self.save(best_model)

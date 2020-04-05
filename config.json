@@ -9,13 +9,20 @@
     "initial_category": "Category:Actors"
   },
   "preprocess": {
+    "fold": 2,
+    "num_of_folds": 5,
     "use_feature_selection": false,
     "NOT_FREQ_LABEL_THRESH": 50,
     "NOT_FREQ_TOKEN_THRESH": 0.01,
     "train_test_ratio": 0.2
   },
   "questions_model": {
+    "model_to_use": "lgb",
+    "find_best_model": false,
     "one_vs_rest": true
+  },
+  "prior": {
+    "E_neginf_replace": -5
   },
   "visualization": {
     "plot_all_ROCs": false
