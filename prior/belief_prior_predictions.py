@@ -57,7 +57,7 @@ class BeliefPropagation:
             message = self.messages_dict[(i, parent, parent_val)]
         else:
             for val in range(len(message)):
-                message[val] = self.    theta(self.p_ij, i, parent, val, parent_val)
+                message[val] = self.theta(self.p_ij, i, parent, val, parent_val)
                 if val == 0:
                     message[val] *= (1 - prediction[i])
                 else:
@@ -84,6 +84,9 @@ class BeliefPropagation:
 
 class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
     is_after_belief = luigi.luigi.BoolParameter()
+    tree_type = luigi.luigi.Parameter()
+    is_normalized = luigi.luigi.BoolParameter(default=False)
+    perv_tree_type = luigi.luigi.Parameter(default=None)
 
     def requires(self):
         req = {
@@ -92,8 +95,8 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
             'E_ij': CreateEntropyTask()
         }
         if self.is_after_belief:
-            print(f'self.is_after_belief: {self.is_after_belief}')
-            req['y_pred'] = QuestionsBeliefPredictionsAfterPriorTask(is_after_belief=False)
+            req['y_pred'] = QuestionsBeliefPredictionsAfterPriorTask(is_after_belief=False,
+                                                                     tree_type=self.perv_tree_type)
         else:
             req['y_pred'] = QuestionsMakePredictionsTask()
 
@@ -101,7 +104,10 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
 
     def output(self):
         output_path = self.input()['y_pred'].path.split('.')[0]
+        if self.is_after_belief and self.is_normalized:
+            output_path += '_normed'
         output_path += '_prior'
+        output_path += '_' + str(self.tree_type)
         output_path += '.pickle'
         return luigi.LocalTarget(get_file_path(output_path, self.config['exp_dir']))
 
@@ -120,7 +126,7 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
         return priored_prediction
 
     @staticmethod
-    def get_conn_strength(p_ij):
+    def get_MI_strength(p_ij):
         conn_strength = np.zeros(p_ij.shape)
         for i in range(p_ij.shape[0]):
             for j in range(p_ij.shape[0]):
@@ -136,15 +142,62 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
                         conn_strength[i, j] += conn_addition
         return (-1.) * conn_strength
 
+    @staticmethod
+    def get_pos_strength(p_ij):
+        conn_strength = np.zeros(p_ij.shape)
+        for i in range(p_ij.shape[0]):
+            for j in range(p_ij.shape[0]):
+                conn_addition = BeliefPropagation.theta_mone(p_ij, i, j, 1, 1) * np.log(
+                    BeliefPropagation.theta(p_ij, i, j, 1, 1))
+                if np.isnan(conn_addition):
+                    conn_addition = 0
+                elif np.isinf(-conn_addition) or np.isinf(conn_addition):
+                    conn_addition = -10
+                conn_strength[i, j] = conn_addition
+        return (-1.) * conn_strength
+
+    @staticmethod
+    def get_semi_pos_strength(p_ij):
+        conn_strength = np.zeros(p_ij.shape)
+        for i in range(p_ij.shape[0]):
+            for j in range(p_ij.shape[0]):
+                conn_strength[i, j] = 0
+                for i_val in range(2):
+                    for j_val in range(2):
+                        if i_val != 0 or j_val != 0:
+                            conn_addition = BeliefPropagation.theta_mone(p_ij, i, j, i_val, j_val) * np.log(
+                                BeliefPropagation.theta(p_ij, i, j, i_val, j_val))
+                            if np.isnan(conn_addition):
+                                conn_addition = 0
+                            elif np.isinf(-conn_addition) or np.isinf(conn_addition):
+                                conn_addition = -10
+                            conn_strength[i, j] += conn_addition
+        return (-1.) * conn_strength
+
+    @staticmethod
+    def get_random_strength(p_ij):
+        conn_strength = np.random.randn(p_ij.shape)
+        return conn_strength
+
     def run(self):
         inputs = self.get_inputs()
         data = inputs['data']
         y_pred = read_data(self.input()['y_pred'].path)
         p_ij = inputs['p_ij']
-        conn_strength_ij = self.get_conn_strength(p_ij)
 
-        # if self.is_after_belief:
-        #     y_pred = self.config['metric'].get_y(y_pred, data.y_test, normalize=True)
+        if self.tree_type == 'MI':
+            conn_strength_ij = self.get_MI_strength(p_ij)
+        elif self.tree_type == 'pos':
+            conn_strength_ij = self.get_pos_strength(p_ij)
+        elif self.tree_type == 'semi_pos':
+            conn_strength_ij = self.get_semi_pos_strength(p_ij)
+        elif self.tree_type == 'random':
+            conn_strength_ij = self.get_random_strength(p_ij)
+        else:
+            raise RuntimeError(f'No known tree type: {self.tree_type}')
+
+        if self.is_after_belief and self.is_normalized:
+            y_pred = self.config['metric'].get_y(y_pred, data.y_test, normalize=True)
 
         T_pos = minimum_spanning_tree(conn_strength_ij).todense()
         y_pred_after_prior = np.array([self.run_prior_on_prediction(p_ij, T_pos, p) for p in y_pred])

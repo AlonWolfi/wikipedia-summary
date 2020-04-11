@@ -49,25 +49,22 @@ def get_from_config(element: str, category: str = None):
         return get_config()[element]
 
 
-def get_file_path(file_name: str, dir_names: Union[str, list] = None):
+def get_file_path(file_name: str, dir_names: Union[str, list] = []):
     if type(dir_names) == str:
         dir_names = [dir_names]
     CACHE_FOLDER = get_project_dir() / 'cache'
-    if dir_names is not None:
-        current_dir = CACHE_FOLDER
-        for dir in dir_names:
-            current_dir /= str(dir)
-        return current_dir / file_name
-    else:
-        return CACHE_FOLDER / file_name
+    current_dir = CACHE_FOLDER
+    for dir in dir_names:
+        current_dir /= str(dir)
+    return current_dir / file_name
 
 
 def validate_path(file_path: Union[str, Path]):
-    for dir in list(file_path.parents)[::-1]:
+    for folder in list(file_path.parents)[::-1]:
         try:
-            os.stat(dir)
+            os.stat(folder)
         except:
-            os.mkdir(dir)
+            os.mkdir(folder)
 
 
 def loop_through_iterable(iterable, func_for_ins):
@@ -121,7 +118,6 @@ def loop_through_iterables_list(iterables_list, func_for_ins):
 def is_picklable(obj):
     try:
         pickle.dumps(obj)
-
     except pickle.PicklingError:
         return False
     return True
@@ -156,9 +152,12 @@ def save_data(data, file_path: Union[str, Path], encoding: str = "utf-8"):
 
 
 def read_data(file_path: Union[str, Path], encoding: str = "utf-8"):
-    '''
-    Saves text to file
-    '''
+    """
+    Saves data to file_path
+    @param file_path:
+    @param encoding:
+    @return:
+    """
     if type(file_path) == str:
         file_path = get_project_dir() / file_path
 
