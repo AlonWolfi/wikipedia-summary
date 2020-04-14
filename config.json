@@ -9,7 +9,7 @@
     "initial_category": "Category:Actors"
   },
   "preprocess": {
-    "fold": 2,
+    "fold": 0,
     "num_of_folds": 5,
     "use_feature_selection": false,
     "NOT_FREQ_LABEL_THRESH": 50,
@@ -17,7 +17,7 @@
     "train_test_ratio": 0.2
   },
   "questions_model": {
-    "model_to_use": "lgb",
+    "model_to_use": "svm",
     "find_best_model": false,
     "one_vs_rest": true
   },

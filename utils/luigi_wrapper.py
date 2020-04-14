@@ -60,7 +60,6 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
                     os.remove(output_path)
 
             loop_through_iterable(task.output(), remove_cache)
-
     luigi.build(
         [
             task
@@ -69,6 +68,8 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
     )
     print(f"#### output ####")
     print(task.get_outputs())
-    frequency = 2400  # Set Frequency To 2500 Hertz
-    duration = 5 * 1000  # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
+    SOUND = True
+    if SOUND:
+        frequency = 2400  # Set Frequency To 2500 Hertz
+        duration = 5 * 1000  # Set Duration To 1000 ms == 1 second
+        winsound.Beep(frequency, duration)
