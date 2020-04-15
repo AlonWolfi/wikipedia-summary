@@ -3,8 +3,6 @@ from scipy.sparse.csgraph import minimum_spanning_tree
 
 import utils.luigi_wrapper as luigi
 from preprocess.create_dataset import CreateDataSetTask
-from prior.create_entropy import CreateEntropyTask
-from prior.create_prior import CreatePriorTask
 from questions_model.create_predictions import QuestionsMakePredictionsTask
 from utils.utils import *
 
@@ -90,9 +88,7 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
 
     def requires(self):
         req = {
-            'data': CreateDataSetTask(),
-            'p_ij': CreatePriorTask(),
-            'E_ij': CreateEntropyTask()
+            'data': CreateDataSetTask()
         }
         if self.is_after_belief:
             req['y_pred'] = QuestionsBeliefPredictionsAfterPriorTask(is_after_belief=False,
@@ -179,11 +175,22 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
         conn_strength = np.random.randn(p_ij.shape)
         return conn_strength
 
+    @staticmethod
+    def _get_prior(y):
+        num_of_pages = y.shape[0]
+        num_of_classes = y.shape[1]
+        p_ij = np.zeros((num_of_classes, num_of_classes))
+        for lst in y:
+            for i in range(num_of_classes):
+                for j in range(num_of_classes):
+                    p_ij[i, j] += (lst[i] * lst[j]) / num_of_pages
+        return p_ij
+
     def run(self):
         inputs = self.get_inputs()
         data = inputs['data']
         y_pred = read_data(self.input()['y_pred'].path)
-        p_ij = inputs['p_ij']
+        p_ij = self._get_prior(data.y_train)
 
         if self.tree_type == 'MI':
             conn_strength_ij = self.get_MI_strength(p_ij)
