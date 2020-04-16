@@ -13,7 +13,7 @@ class FeatureSelectionTask(luigi.Task):
         return luigi.LocalTarget(get_file_path('final_data.pickle', 'data'))
 
     def run(self):
-        X = self.get_inputs()
+        X = self.get_task_inputs()
 
         feature_indices = np.random.choice(np.arange(X.shape[1]), size=1000)
 

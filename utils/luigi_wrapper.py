@@ -26,14 +26,26 @@ class Task(luigi.Task):
         return LocalTarget(self.__get_task_done_path())
 
     @classmethod
-    def get_outputs(cls):
-        ins = cls()
-        return loop_through_iterable(ins.output(), lambda _output: read_data(_output.path))
+    def get_task_outputs(cls):
+        try:
+            ins = cls()
+            return loop_through_iterable(ins.output(), lambda _output: read_data(_output.path))
+        except:
+            raise RuntimeError('Params must be set to use get_task_outputs method ')
 
     @classmethod
-    def get_inputs(cls):
-        ins = cls()
-        return loop_through_iterable(ins.input(), lambda _input: read_data(_input.path))
+    def get_task_inputs(cls):
+        try:
+            ins = cls()
+            return loop_through_iterable(ins.input(), lambda _input: read_data(_input.path))
+        except:
+            raise RuntimeError('Params must be set to use get_task_outputs method')
+
+    def get_outputs(self):
+        return loop_through_iterable(self.output(), lambda _output: read_data(_output.path))
+
+    def get_inputs(self):
+        return loop_through_iterable(self.input(), lambda _output: read_data(_output.path))
 
     @classmethod
     def task_done(cls):
@@ -67,7 +79,7 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
         local_scheduler=local_scheduler
     )
     print(f"#### output ####")
-    print(task.get_outputs())
+    print(task.get_task_outputs())
     SOUND = True
     if SOUND:
         frequency = 2400  # Set Frequency To 2500 Hertz

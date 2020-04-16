@@ -20,7 +20,7 @@ class _CreateKFoldDataSet(luigi.Task):
         return luigi.LocalTarget(get_file_path('kfold_dataset.pickle', 'data'))
 
     def run(self):
-        inputs = self.get_inputs()
+        inputs = self.get_task_inputs()
         X = inputs['X']
         y = inputs['y']
         num_of_folds = int(self.config['preprocess']['num_of_folds'])
@@ -42,7 +42,7 @@ class CreateDataSetTask(luigi.Task):
         return luigi.LocalTarget(get_file_path('dataset_' + str(self.config['preprocess']['fold']) + '.pickle', 'data'))
 
     def run(self):
-        dataset = self.get_inputs()
+        dataset = self.get_task_inputs()
         X = dataset['X']
         y = dataset['y']
         train_test_splits = dataset['train_test_splits']

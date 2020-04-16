@@ -69,7 +69,7 @@ class QuestionsPredictionsAfterPriorTask(luigi.Task):
         return priored_prediction
 
     def run(self):
-        inputs = self.get_inputs()
+        inputs = self.get_task_inputs()
         data: DataSet = inputs['data']
         y_pred = inputs['y_pred']
 

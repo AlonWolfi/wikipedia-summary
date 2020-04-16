@@ -1,5 +1,5 @@
 {
-  "luigi_local_scheduler": true,
+  "luigi_local_scheduler": false,
   "debug": {
     "DEBUG": false,
     "delete_cache": false

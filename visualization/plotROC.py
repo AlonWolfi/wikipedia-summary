@@ -115,7 +115,7 @@ class PlotROCTask(luigi.Task):
         return f
 
     def run(self):
-        inputs = self.get_inputs()
+        inputs = self.get_task_inputs()
         data: DataSet = inputs['data']
         y_pred = inputs['y_pred']
         index_test = data._arr_indices_test

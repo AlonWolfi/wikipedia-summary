@@ -60,7 +60,7 @@ class DataTokenizationTask(luigi.Task):
         return vocab
 
     def run(self):
-        full_df = self.get_inputs()
+        full_df = self.get_task_inputs()
 
         vocab = self.__get_vocabulary(full_df['text'])
 

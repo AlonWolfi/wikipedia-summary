@@ -84,7 +84,7 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
     is_after_belief = luigi.luigi.BoolParameter()
     tree_type = luigi.luigi.Parameter()
     is_normalized = luigi.luigi.BoolParameter(default=False)
-    perv_tree_type = luigi.luigi.Parameter(default=None)
+    perv_tree_type = luigi.luigi.Parameter(default=' ')
 
     def requires(self):
         req = {

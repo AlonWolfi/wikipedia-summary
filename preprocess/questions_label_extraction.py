@@ -45,7 +45,7 @@ class QuestionsLabelExtractionTask(luigi.Task):
         return filtered_questions
 
     def run(self):
-        full_df = self.requires().get_outputs()
+        full_df = self.requires().get_task_outputs()
 
         questions = full_df['infobox'].apply(self.__get_questions_from_infobox)
         filtered_questions = self.__filter_small_classes(questions)

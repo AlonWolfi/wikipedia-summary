@@ -27,7 +27,7 @@ class DataExtractionTask(luigi.Task):
         return df
 
     def run(self):
-        pages_lst = self.get_inputs().split('\n')
+        pages_lst = self.get_task_inputs().split('\n')
 
         if self.config['debug']['DEBUG']:
             pages_lst = pages_lst[:50]

@@ -72,7 +72,7 @@ class QuestionsModelSelectionTask(luigi.Task):
         return luigi.LocalTarget(get_file_path(f"best_estimator.pickle", self.config['exp_dir']))
 
     def run(self):
-        data: DataSet = self.get_inputs()
+        data: DataSet = self.get_task_inputs()
         X_train, y_train = data.train_data
         if self.config['questions_model']['find_best_model']:
             metric = self.config['metric']
