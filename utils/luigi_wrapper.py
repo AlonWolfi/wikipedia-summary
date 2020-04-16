@@ -61,7 +61,7 @@ class Task(luigi.Task):
         self.task_done()
 
 
-def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False):
+def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False, num_of_workers=1):
     if get_from_config('delete_cache', 'debug'):
         if delete_all:
             shutil.rmtree(get_project_dir() / 'cache')
@@ -75,7 +75,7 @@ def run_task(task: Task, local_scheduler: bool = False, delete_all: bool = False
     luigi.build(
         [
             task
-        ],
+        ], workers=num_of_workers,
         local_scheduler=local_scheduler
     )
     print(f"#### output ####")

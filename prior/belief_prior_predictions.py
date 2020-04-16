@@ -172,7 +172,7 @@ class QuestionsBeliefPredictionsAfterPriorTask(luigi.Task):
 
     @staticmethod
     def get_random_strength(p_ij):
-        conn_strength = np.random.randn(p_ij.shape)
+        conn_strength = np.random.randn(*p_ij.shape)
         return conn_strength
 
     @staticmethod
