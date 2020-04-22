@@ -1,6 +1,6 @@
 from nltk.stem.porter import PorterStemmer
 from sklearn.preprocessing import MultiLabelBinarizer
-
+import pandas as pd
 import utils.luigi_wrapper as luigi
 from extraction.data_extraction import DataExtractionTask
 from utils.utils import *

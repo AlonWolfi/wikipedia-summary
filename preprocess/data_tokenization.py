@@ -6,7 +6,7 @@ stop_words = set(stopwords.words('english'))
 porter = PorterStemmer()
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-
+import pandas as pd
 import utils.luigi_wrapper as luigi
 from utils.utils import *
 
