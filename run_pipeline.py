@@ -61,4 +61,4 @@ class RunExperiment(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run_task(RunExperiment(), local_scheduler=get_from_config('luigi_local_scheduler'), delete_all=False)
+    luigi.run_task(RunExperiment(), local_scheduler=get_from_config('luigi_local_scheduler'), num_of_workers=1, delete_all=False)
